@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Vaani - Voice Translator</title>
+
+<style>
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        min-height: 100vh;
+
+        background:
+            linear-gradient(
+                135deg,
+                #fff7ed,
+                #ffffff,
+                #f0fdf4
+            );
+
+        color: #222;
+    }
+
+
+    /* =========================
+       NAVBAR
+    ========================= */
+
+    .navbar {
+
+        width: 100%;
+
+        padding: 20px 7%;
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        background: white;
+
+        box-shadow:
+            0 2px 15px
+            rgba(0,0,0,0.08);
+    }
+
+
+    /* =========================
+       VAANI LOGO
+    ========================= */
+
+    .logo {
+
+        font-size: 32px;
+
+        font-weight: bold;
+
+        letter-spacing: 1px;
+
+    }
+
+
+    .logo .orange {
+
+        color: #FF9933;
+
+    }
+
+
+    .logo .white {
+
+        color: #555;
+
+    }
+
+
+    .logo .green {
+
+        color: #138808;
+
+    }
+
+
+    /* =========================
+       NAV BUTTON
+    ========================= */
+
+    .nav-button {
+
+        padding:
+            11px 22px;
+
+        border: none;
+
+        border-radius: 8px;
+
+        background: #138808;
+
+        color: white;
+
+        font-size: 15px;
+
+        font-weight: bold;
+
+        cursor: pointer;
+
+    }
+
+
+    .nav-button:hover {
+
+        background: #0f7007;
+
+    }
+
+
+    /* =========================
+       HERO
+    ========================= */
+
+    .hero {
+
+        max-width: 1100px;
+
+        width: 90%;
+
+        margin:
+            75px auto 60px;
+
+        text-align: center;
+
+    }
+
+
+    .mic {
+
+        font-size: 70px;
+
+        margin-bottom: 20px;
+
+    }
+
+
+    .hero h1 {
+
+        font-size: 58px;
+
+        margin-bottom: 20px;
+
+    }
+
+
+    .hero h1 .orange {
+
+        color: #FF9933;
+
+    }
+
+
+    .hero h1 .green {
+
+        color: #138808;
+
+    }
+
+
+    .hero p {
+
+        max-width: 720px;
+
+        margin: auto;
+
+        color: #666;
+
+        font-size: 20px;
+
+        line-height: 1.6;
+
+    }
+
+
+    /* =========================
+       START BUTTON
+    ========================= */
+
+    .start-button {
+    display: inline-block;
+    text-decoration: none;
+
+    margin-top: 35px;
+    padding: 17px 42px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #138808;
+    color: white;
+
+    font-size: 19px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 6px 18px
+        rgba(19,136,8,0.25);
+}
+
+
+    .start-button:hover {
+
+        background: #0f7007;
+
+        transform:
+            translateY(-2px);
+
+    }
+
+
+    /* =========================
+       FEATURES
+    ========================= */
+
+    .features {
+
+        max-width: 1000px;
+
+        width: 90%;
+
+        margin:
+            40px auto 80px;
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, 1fr);
+
+        gap: 22px;
+
+    }
+
+
+    .feature {
+
+        background: white;
+
+        padding: 30px 20px;
+
+        text-align: center;
+
+        border-radius: 15px;
+
+        box-shadow:
+            0 5px 20px
+            rgba(0,0,0,0.08);
+
+    }
+
+
+    .feature-icon {
+
+        font-size: 42px;
+
+        margin-bottom: 15px;
+
+    }
+
+
+    .feature h3 {
+
+        margin-bottom: 10px;
+
+        font-size: 20px;
+
+    }
+
+
+    .feature p {
+
+        color: #777;
+
+        line-height: 1.5;
+
+    }
+
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+
+        text-align: center;
+
+        padding: 25px;
+
+        background: white;
+
+        color: #777;
+
+        border-top:
+            1px solid #eee;
+
+    }
+
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 700px) {
+
+        .navbar {
+
+            padding:
+                17px 5%;
+
+        }
+
+
+        .hero {
+
+            margin:
+                55px auto;
+
+        }
+
+
+        .hero h1 {
+
+            font-size: 42px;
+
+        }
+
+
+        .hero p {
+
+            font-size: 17px;
+
+        }
+
+
+        .features {
+
+            grid-template-columns:
+                1fr;
+
+        }
+
+
+        .nav-button {
+
+            display: none;
+
+        }
+
+    }
+
+</style>
+
+
+</head>
+
+<body>
+
+
+<!-- =========================
+     NAVBAR
+========================= -->
+
+<nav class="navbar">
+
+
+    <div class="logo"><span class="orange">V</span><span class="white">aa</span><span class="green">ni</span></div>
+
+
+    <a
+    href="/app"
+    class="start-button">
+
+    🎤 Start Translating
+
+</a>
+
+
+</nav>
+
+
+
+<!-- =========================
+     HERO SECTION
+========================= -->
+
+<section class="hero">
+
+
+    <div class="mic">
+
+        🎙️
+
+    </div>
+
+
+    <h1>
+
+        <span class="orange">
+            Vaani
+        </span>
+
+        <span class="green">
+            Voice Translator
+        </span>
+
+    </h1>
+
+
+    <p>
+
+        Break language barriers with Vaani.
+        Translate text and voice between
+        multiple languages quickly and easily.
+
+    </p>
+
+
+    <button
+        class="start-button"
+        onclick="openTranslator()">
+
+        🎤 Start Translating
+
+    </button>
+
+
+</section>
+
+
+
+<!-- =========================
+     FEATURES
+========================= -->
+
+<section class="features">
+
+
+    <div class="feature">
+
+
+        <div class="feature-icon">
+
+            🌐
+
+        </div>
+
+
+        <h3>
+
+            Multi-Language
+
+        </h3>
+
+
+        <p>
+
+            Translate between multiple
+            languages easily.
+
+        </p>
+
+
+    </div>
+
+
+
+    <div class="feature">
+
+
+        <div class="feature-icon">
+
+            🎤
+
+        </div>
+
+
+        <h3>
+
+            Voice Translation
+
+        </h3>
+
+
+        <p>
+
+            Speak naturally and get
+            translated voice.
+
+        </p>
+
+
+    </div>
+
+
+
+    <div class="feature">
+
+
+        <div class="feature-icon">
+
+            🗣️
+
+        </div>
+
+
+        <h3>
+
+            Conversation Mode
+
+        </h3>
+
+
+        <p>
+
+            Have conversations across
+            different languages.
+
+        </p>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer>
+
+    © 2026 Vaani — Voice Translator
+
+</footer>
+
+
+
+<!-- =========================
+     OPEN TRANSLATOR
+========================= -->
+
+<script>
+
+    function openTranslator() {
+
+        window.location.href =
+            "http://127.0.0.1:8000/app";
+
+    }
+
+</script>
+
+</body>
+
+</html>

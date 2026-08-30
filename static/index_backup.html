@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Vaani - Voice Translator</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f5f9;
+            color: #222;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.12);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 30px;
+        }
+
+        .language-box {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .language-box div {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .swap-btn {
+            width: auto;
+            margin: 0;
+            padding: 11px 18px;
+            background: #f59e0b;
+            color: white;
+        }
+
+        .swap-btn:hover {
+            background: #d97706;
+        }
+
+        .translate-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .translate-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .voice-btn {
+            background: #16a34a;
+            color: white;
+        }
+
+        .voice-btn:hover {
+            background: #15803d;
+        }
+
+        .automatic-btn {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .automatic-btn:hover {
+            background: #6d28d9;
+        }
+
+        .clear-btn {
+            background: #dc2626;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #b91c1c;
+        }
+
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #translationResult {
+            font-size: 18px;
+            min-height: 30px;
+        }
+
+        #status {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #555;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+
+            .container {
+                width: 95%;
+                padding: 20px;
+                margin: 20px auto;
+            }
+
+            .language-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .swap-btn {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>🎙️ Vaani</h1>
+
+    <div class="subtitle">
+        Voice Translator
+    </div>
+
+
+    <!-- Language Selection -->
+
+    <div class="language-box">
+
+        <div>
+
+            <label for="sourceLanguage">
+                Source Language
+            </label>
+
+            <select id="sourceLanguage">
+
+                <option value="hi">Hindi</option>
+                <option value="en">English</option>
+                <option value="ja">Japanese</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="pt">Portuguese</option>
+                <option value="ru">Russian</option>
+                <option value="ko">Korean</option>
+                <option value="zh">Chinese</option>
+                <option value="ar">Arabic</option>
+                <option value="bn">Bengali</option>
+                <option value="gu">Gujarati</option>
+                <option value="mr">Marathi</option>
+                <option value="ta">Tamil</option>
+                <option value="te">Telugu</option>
+                <option value="ur">Urdu</option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Swap Button -->
+
+        <button
+            class="swap-btn"
+            onclick="swapLanguages()"
+        >
+            🔄 Swap
+        </button>
+
+
+        <div>
+
+            <label for="targetLanguage">
+                Target Language
+            </label>
+
+            <select id="targetLanguage">
+
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="ja">Japanese</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="pt">Portuguese</option>
+                <option value="ru">Russian</option>
+                <option value="ko">Korean</option>
+                <option value="zh">Chinese</option>
+                <option value="ar">Arabic</option>
+                <option value="bn">Bengali</option>
+                <option value="gu">Gujarati</option>
+                <option value="mr">Marathi</option>
+                <option value="ta">Tamil</option>
+                <option value="te">Telugu</option>
+                <option value="ur">Urdu</option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <!-- Text Input -->
+
+    <label for="textInput">
+        Text
+    </label>
+
+    <textarea
+        id="textInput"
+        placeholder="यहाँ text लिखें या Vaani से बोलें..."
+    ></textarea>
+
+
+    <!-- Translate -->
+
+    <button
+        class="translate-btn"
+        onclick="translateText()"
+    >
+        🌐 Translate
+    </button>
+
+
+    <!-- Speak -->
+
+    <button
+        class="voice-btn"
+        onclick="speakText()"
+    >
+        🔊 Speak Text
+    </button>
+
+
+    <!-- Automatic Voice Translator -->
+
+    <button
+        class="automatic-btn"
+        onclick="startAutomaticVaani()"
+    >
+        🤖 Vaani से बोलें और Translate करें
+    </button>
+
+
+    <!-- Clear -->
+
+    <button
+        class="clear-btn"
+        onclick="clearAll()"
+    >
+        🗑️ Clear
+    </button>
+
+
+    <!-- Status -->
+
+    <div id="status">
+        Ready
+    </div>
+
+
+    <!-- Result -->
+
+    <div class="result-box">
+
+        <div class="result-title">
+            Translation Result
+        </div>
+
+        <div id="translationResult">
+            यहाँ translation दिखाई देगा।
+        </div>
+
+
+        <audio
+            id="audioPlayer"
+            controls
+            style="display:none;"
+        ></audio>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let recognition = null;
+
+
+/* =========================
+   TRANSLATE
+========================= */
+
+async function translateText() {
+
+    const text =
+        document.getElementById("textInput").value.trim();
+
+    const source =
+        document.getElementById("sourceLanguage").value;
+
+    const target =
+        document.getElementById("targetLanguage").value;
+
+
+    if (!text) {
+
+        alert("पहले text लिखें।");
+
+        return;
+    }
+
+
+    document.getElementById("status").innerText =
+        "🔄 Translation हो रहा है...";
+
+
+    try {
+
+        const response = await fetch("/translate", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                text: text,
+
+                source: source,
+
+                target: target
+
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        console.log("Translation:", data);
+
+
+        if (data.error) {
+
+            document.getElementById("status").innerText =
+                "❌ " + data.error;
+
+            return;
+        }
+
+
+        document.getElementById("translationResult").innerText =
+            data.translated_text;
+
+
+        document.getElementById("status").innerText =
+            "✅ Translation complete";
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById("status").innerText =
+            "❌ Translation में समस्या हुई।";
+
+    }
+
+}
+
+
+
+/* =========================
+   SPEAK
+========================= */
+
+async function speakText() {
+
+    const text =
+        document.getElementById("translationResult").innerText.trim();
+
+    const language =
+        document.getElementById("targetLanguage").value;
+
+
+    if (!text ||
+        text === "यहाँ translation दिखाई देगा।") {
+
+        alert("पहले translation करें।");
+
+        return;
+    }
+
+
+    document.getElementById("status").innerText =
+        "🔊 Voice बनाई जा रही है...";
+
+
+    try {
+
+        const response = await fetch("/speak", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                text: text,
+
+                language: language
+
+            })
+
+        });
+
+
+        const data = await response.json();
+
+
+        console.log("Voice:", data);
+
+
+        if (!data.file) {
+
+            document.getElementById("status").innerText =
+                "❌ Voice generate नहीं हुई।";
+
+            return;
+        }
+
+
+        const audioPlayer =
+            document.getElementById("audioPlayer");
+
+
+        audioPlayer.src =
+            "/static/" +
+            data.file +
+            "?time=" +
+            Date.now();
+
+
+        audioPlayer.style.display = "block";
+
+
+        await audioPlayer.play();
+
+
+        document.getElementById("status").innerText =
+            "🔊 Vaani बोल रहा है...";
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById("status").innerText =
+            "❌ Voice में समस्या हुई।";
+
+    }
+
+}
+
+
+
+/* =========================
+   AUTOMATIC VAANI
+========================= */
+
+function startAutomaticVaani() {
+
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+
+    if (!SpeechRecognition) {
+
+        alert(
+            "आपका browser Voice Recognition support नहीं करता। Google Chrome इस्तेमाल करें।"
+        );
+
+        return;
+    }
+
+
+    recognition =
+        new SpeechRecognition();
+
+
+    const source =
+        document.getElementById("sourceLanguage").value;
+
+
+    const target =
+        document.getElementById("targetLanguage").value;
+
+
+    const speechLanguages = {
+
+        "hi": "hi-IN",
+        "en": "en-US",
+        "ja": "ja-JP",
+        "fr": "fr-FR",
+        "de": "de-DE",
+        "es": "es-ES",
+        "it": "it-IT",
+        "pt": "pt-PT",
+        "ru": "ru-RU",
+        "ko": "ko-KR",
+        "zh": "zh-CN",
+        "ar": "ar-SA",
+        "bn": "bn-IN",
+        "gu": "gu-IN",
+        "mr": "mr-IN",
+        "ta": "ta-IN",
+        "te": "te-IN",
+        "ur": "ur-PK"
+
+    };
+
+
+    recognition.lang =
+        speechLanguages[source] || "hi-IN";
+
+
+    recognition.interimResults = false;
+
+    recognition.continuous = false;
+
+
+    document.getElementById("status").innerText =
+        "🎤 Vaani सुन रहा है... बोलिए";
+
+
+    recognition.start();
+
+
+    recognition.onresult =
+        async function(event) {
+
+
+        const speechText =
+            event.results[0][0].transcript;
+
+
+        console.log(
+            "Recognized text:",
+            speechText
+        );
+
+
+        document.getElementById("textInput").value =
+            speechText;
+
+
+        document.getElementById("status").innerText =
+            "🔄 Translation हो रहा है...";
+
+
+        try {
+
+
+            const response =
+                await fetch("/translate", {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        text: speechText,
+
+                        source: source,
+
+                        target: target
+
+                    })
+
+                });
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                "Translation response:",
+                data
+            );
+
+
+            if (data.error) {
+
+                document.getElementById("status").innerText =
+                    "❌ " + data.error;
+
+                return;
+            }
+
+
+            if (!data.translated_text) {
+
+                document.getElementById("status").innerText =
+                    "❌ Translation नहीं मिला।";
+
+                return;
+            }
+
+
+            document.getElementById(
+                "translationResult"
+            ).innerText =
+                data.translated_text;
+
+
+            document.getElementById("status").innerText =
+                "✅ Translation complete";
+
+
+            const voiceResponse =
+                await fetch("/speak", {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        text:
+                            data.translated_text,
+
+                        language:
+                            target
+
+                    })
+
+                });
+
+
+            const voiceData =
+                await voiceResponse.json();
+
+
+            console.log(
+                "Voice response:",
+                voiceData
+            );
+
+
+            if (!voiceData.file) {
+
+                document.getElementById("status").innerText =
+                    "❌ Voice generate नहीं हुई।";
+
+                return;
+            }
+
+
+            const audioPlayer =
+                document.getElementById(
+                    "audioPlayer"
+                );
+
+
+            audioPlayer.src =
+                "/static/" +
+                voiceData.file +
+                "?time=" +
+                Date.now();
+
+
+            audioPlayer.style.display =
+                "block";
+
+
+            document.getElementById("status").innerText =
+                "🔊 Vaani बोल रहा है...";
+
+
+            await audioPlayer.play();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Automatic Vaani error:",
+                error
+            );
+
+
+            document.getElementById("status").innerText =
+                "❌ Automatic translation में समस्या हुई।";
+
+        }
+
+    };
+
+
+    recognition.onerror =
+        function(event) {
+
+            console.error(
+                "Voice error:",
+                event.error
+            );
+
+
+            document.getElementById("status").innerText =
+                "❌ Voice error: " +
+                event.error;
+
+        };
+
+
+    recognition.onend =
+        function() {
+
+            console.log(
+                "Voice recognition ended."
+            );
+
+        };
+
+}
+
+
+
+/* =========================
+   SWAP LANGUAGES
+========================= */
+
+function swapLanguages() {
+
+    const source =
+        document.getElementById("sourceLanguage");
+
+    const target =
+        document.getElementById("targetLanguage");
+
+
+    const oldSource =
+        source.value;
+
+
+    source.value =
+        target.value;
+
+
+    target.value =
+        oldSource;
+
+
+    document.getElementById("status").innerText =
+        "🔄 Languages swapped successfully!";
+
+}
+
+
+
+/* =========================
+   CLEAR
+========================= */
+
+function clearAll() {
+
+    document.getElementById("textInput").value = "";
+
+    document.getElementById("translationResult").innerText =
+        "यहाँ translation दिखाई देगा।";
+
+
+    const audioPlayer =
+        document.getElementById("audioPlayer");
+
+
+    audioPlayer.pause();
+
+    audioPlayer.src = "";
+
+    audioPlayer.style.display = "none";
+
+
+    document.getElementById("status").innerText =
+        "Ready";
+
+}
+
+</script>
+
+</body>
+
+</html>
