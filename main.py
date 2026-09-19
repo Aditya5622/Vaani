@@ -86,7 +86,7 @@ def home():
 
 @app.get("/app")
 def vaani_app():
-    return FileResponse("static/index.html")
+    return FileResponse("static/translator.html")
 
 
 # ==========================================
