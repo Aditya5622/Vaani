@@ -1,63 +1,115 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vaani - भारत की आवाज़</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Vaani - Voice & AI Translation Hub</title>
+
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#0c0e12">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Client-side PDF Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        /* CSS Theme Variables */
+        :root[data-theme="dark"] {
+            --bg-canvas: #0c0e12;
+            --surface-card: #13171f;
+            --surface-inner: #1a202c;
+            --surface-output: #11141b;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+
+            --text-heading: #f8fafc;
+            --text-body: #cbd5e1;
+            --text-muted: #828d9d;
+            --text-dim: #525c6a;
+
+            --soft-blue-bg: rgba(30, 64, 175, 0.35);
+            --soft-blue-border: rgba(96, 165, 250, 0.4);
+            --soft-blue-hover: rgba(37, 99, 235, 0.5);
+
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            --glass-btn-bg: rgba(255, 255, 255, 0.04);
+            --active-tab-bg: rgba(255, 255, 255, 0.08);
+
+            --bubble-left-bg: rgba(16, 185, 129, 0.12);
+            --bubble-left-border: rgba(16, 185, 129, 0.3);
+            --bubble-right-bg: rgba(37, 99, 235, 0.15);
+            --bubble-right-border: rgba(96, 165, 250, 0.3);
+        }
+
+        :root[data-theme="light"] {
+            --bg-canvas: #f1f5f9;
+            --surface-card: #ffffff;
+            --surface-inner: #f8fafc;
+            --surface-output: #f1f5f9;
+            --border-glass: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.2);
+
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --text-dim: #94a3b8;
+
+            --soft-blue-bg: #2563eb;
+            --soft-blue-border: #1d4ed8;
+            --soft-blue-hover: #1e40af;
+
+            --card-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+            --glass-btn-bg: rgba(0, 0, 0, 0.04);
+            --active-tab-bg: #ffffff;
+
+            --bubble-left-bg: #ecfdf5;
+            --bubble-left-border: #a7f3d0;
+            --bubble-right-bg: #eff6ff;
+            --bubble-right-border: #bfdbfe;
+        }
+
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --accent: #ff8a00;
-            --accent-green: #10b981;
-            --bg-start: #0f172a;
-            --bg-end: #1e1b4b;
-            --surface: rgba(30, 41, 59, 0.7);
-            --surface-hover: rgba(51, 65, 85, 0.8);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-glow: rgba(99, 102, 241, 0.3);
-            --radius: 20px;
+            --mic-green-bg: #059669;
+            --mic-green-hover: #10b981;
+            --mic-blue-bg: #2563eb;
+            --mic-blue-hover: #3b82f6;
+            --radius-outer: 22px;
+            --radius-inner: 14px;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease;
         }
 
         body {
-            background: radial-gradient(circle at top right, #312e81, var(--bg-start) 60%),
-                        linear-gradient(180deg, var(--bg-start), var(--bg-end));
-            color: var(--text-main);
+            background-color: var(--bg-canvas);
+            color: var(--text-body);
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 16px;
+            align-items: flex-start;
+            padding: 24px 14px;
         }
 
         .app-container {
             width: 100%;
-            max-width: 480px;
-            background: var(--surface);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--border);
-            border-radius: 28px;
-            padding: 24px 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.15);
+            max-width: 490px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-outer);
+            padding: 22px 18px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
         }
 
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -68,145 +120,402 @@
             align-items: center;
             gap: 10px;
         }
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, var(--accent), var(--primary));
-            border-radius: 12px;
+        .brand-badge {
+            width: 38px;
+            height: 38px;
+            background: var(--surface-inner);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
-            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+            font-size: 19px;
         }
         .brand h1 {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(to right, #fff, #cbd5e1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-heading);
+            letter-spacing: -0.3px;
         }
         .brand p {
             font-size: 11px;
             color: var(--text-muted);
-            font-weight: 500;
         }
-        .status-pill {
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .theme-toggle-btn {
+            background: var(--surface-inner);
+            border: 1px solid var(--border-glass);
+            color: var(--text-heading);
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .theme-toggle-btn:hover {
+            border-color: var(--border-hover);
+        }
+
+        .status-chip {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             padding: 4px 10px;
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.12);
             border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 999px;
-            font-size: 12px;
-            color: var(--accent-green);
+            font-size: 11px;
+            color: #10b981;
             font-weight: 600;
         }
         .status-dot {
             width: 6px;
             height: 6px;
-            background: var(--accent-green);
+            background: #10b981;
             border-radius: 50%;
-            animation: pulse 2s infinite;
         }
 
-        /* 4 Main Action Cards */
-        .action-grid {
+        /* 3-Mode Selector */
+        .mode-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-        .action-card {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 12px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: var(--surface-inner);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
         }
-        .action-card.active {
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.25), rgba(99, 102, 241, 0.05));
-            border-color: var(--primary-light);
-        }
-        .action-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--border-glow);
-        }
-        .action-icon {
-            font-size: 20px;
-        }
-        .action-label {
-            font-size: 11px;
-            font-weight: 600;
+        .mode-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 4px;
+            border-radius: 8px;
             color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
-        .action-card.active .action-label {
-            color: #fff;
+        .mode-btn.active {
+            background: var(--active-tab-bg);
+            color: var(--text-heading);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Language Switcher Bar */
         .lang-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 8px 12px;
+            background: var(--surface-inner);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 6px 12px;
             gap: 8px;
         }
         .lang-select {
             flex: 1;
             background: transparent;
             border: none;
-            color: var(--text-main);
-            font-size: 14px;
+            color: var(--text-heading);
+            font-size: 13px;
             font-weight: 600;
             outline: none;
             cursor: pointer;
             text-align: center;
         }
         .lang-select option {
-            background: #1e293b;
-            color: #fff;
+            background: var(--surface-card);
+            color: var(--text-heading);
         }
         .swap-btn {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            color: var(--primary-light);
-            width: 36px;
-            height: 36px;
+            background: var(--glass-btn-bg);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.3s;
         }
         .swap-btn:hover {
             transform: rotate(180deg);
-            background: var(--primary);
-            color: #fff;
+            color: var(--text-heading);
+            border-color: var(--border-hover);
         }
 
-        /* Input Card */
-        .card {
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 16px;
+        .card-box {
+            background: var(--surface-inner);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-inner);
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+        textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-heading);
+            font-size: 15px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            min-height: 75px;
+        }
+        textarea::placeholder {
+            color: var(--text-dim);
+        }
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .glass-btn {
+            background: var(--glass-btn-bg);
+            border: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .glass-btn:hover {
+            color: var(--text-heading);
+            border-color: var(--border-hover);
+        }
+
+        .btn-translate {
+            background: var(--soft-blue-bg);
+            border: 1px solid var(--soft-blue-border);
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-translate:hover {
+            background: var(--soft-blue-hover);
+        }
+
+        .output-box {
+            background: var(--surface-output);
+        }
+        .output-text {
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 55px;
+            color: var(--text-heading);
+            font-weight: 500;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .output-placeholder {
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        .mic-hub {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding-top: 2px;
+        }
+        .mic-btn {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: var(--mic-green-bg);
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
+        }
+        .mic-btn.recording {
+            background: #dc2626;
+            animation: pulse-ring 1.3s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+            70% { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        /* 2-Way View */
+        #conversationView {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            position: relative;
         }
-        .card-header {
+        .convo-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4px;
+        }
+        .convo-chat-box {
+            background: var(--surface-inner);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-inner);
+            padding: 14px;
+            min-height: 250px;
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            line-height: 1.4;
+        }
+        .chat-bubble.left {
+            align-self: flex-start;
+            background: var(--bubble-left-bg);
+            border: 1px solid var(--bubble-left-border);
+            border-bottom-left-radius: 3px;
+        }
+        .chat-bubble.right {
+            align-self: flex-end;
+            background: var(--bubble-right-bg);
+            border: 1px solid var(--bubble-right-border);
+            border-bottom-right-radius: 3px;
+        }
+        .bubble-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+        .bubble-orig { color: var(--text-muted); font-size: 12px; }
+        .bubble-trans { color: var(--text-heading); font-weight: 600; }
+
+        .convo-mic-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding-top: 6px;
+        }
+        .person-card {
+            background: var(--surface-inner);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-inner);
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+        .person-title { font-size: 12px; font-weight: 700; color: var(--text-heading); }
+        .person-lang { font-size: 11px; color: var(--text-muted); }
+        .convo-mic-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            border: none;
+            color: #ffffff;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-person1 { background: var(--mic-green-bg); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35); }
+        .btn-person2 { background: var(--mic-blue-bg); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); }
+
+        /* Camera View */
+        #cameraView {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .ocr-drop-box {
+            background: var(--surface-inner);
+            border: 2px dashed var(--border-glass);
+            border-radius: var(--radius-inner);
+            padding: 24px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .ocr-drop-box:hover {
+            border-color: var(--soft-blue-border);
+        }
+        .ocr-icon { font-size: 36px; }
+        .ocr-preview-img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 8px;
+            display: none;
+            border: 1px solid var(--border-glass);
+            margin-top: 8px;
+        }
+        .ocr-status {
+            font-size: 12px;
+            color: #0284c7;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+        }
+
+        /* History */
+        .history-section {
+            border-top: 1px solid var(--border-glass);
+            padding-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .history-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -214,253 +523,266 @@
             color: var(--text-muted);
             font-weight: 600;
         }
-        textarea {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 16px;
-            line-height: 1.5;
-            resize: none;
-            outline: none;
-            min-height: 90px;
-        }
-        textarea::placeholder {
-            color: #64748b;
-        }
-        .card-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-        .icon-btn {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: 0.2s;
-        }
-        .icon-btn:hover {
-            color: #fff;
-            border-color: var(--primary-light);
-        }
-
-        /* Output Card */
-        .output-card {
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.08), rgba(15, 23, 42, 0.6));
-            border-color: var(--border-glow);
-        }
-        .output-text {
-            font-size: 17px;
-            line-height: 1.5;
-            min-height: 70px;
-            color: #fff;
-            font-weight: 500;
-        }
-        .output-placeholder {
-            color: #64748b;
-            font-style: italic;
-        }
-
-        /* Voice Mic Section */
-        .voice-section {
+        .history-list {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-top: 4px;
-        }
-        .mic-btn {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--primary));
-            border: none;
-            color: #fff;
-            font-size: 28px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-            transition: all 0.25s ease;
-            position: relative;
-        }
-        .mic-btn:hover {
-            transform: scale(1.06);
-            box-shadow: 0 15px 30px rgba(255, 138, 0, 0.4);
-        }
-        .mic-btn.recording {
-            animation: recordPulse 1.2s infinite;
-            background: linear-gradient(135deg, #ef4444, #f97316);
-        }
-        .mic-hint {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* Main Translate Button */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: #fff;
-            border: none;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             gap: 8px;
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-            transition: 0.2s;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        .btn-primary:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
+        .history-item {
+            background: var(--surface-inner);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
         }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        .history-item .orig { color: var(--text-muted); font-size: 12px; }
+        .history-item .trans { color: var(--text-heading); font-weight: 600; }
+        .history-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
         }
-        @keyframes recordPulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        .history-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 11px;
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Header -->
     <div class="header">
         <div class="brand">
-            <div class="brand-icon">🎙️</div>
+            <div class="brand-badge">🎙️</div>
             <div>
                 <h1>Vaani</h1>
-                <p>Voice & AI Translator</p>
+                <p>Voice & AI Translation Hub</p>
             </div>
         </div>
-        <div class="status-pill">
-            <span class="status-dot"></span>
-            Online
+        <div class="header-actions">
+            <button class="theme-toggle-btn" id="themeToggleBtn" title="Switch Theme">☀️</button>
+            <div class="status-chip">
+                <span class="status-dot"></span>
+                Online
+            </div>
         </div>
     </div>
 
-    <!-- 4 Action Cards -->
-    <div class="action-grid">
-        <div class="action-card active">
-            <span class="action-icon">🌐</span>
-            <span class="action-label">Translate</span>
-        </div>
-        <div class="action-card">
-            <span class="action-icon">🗣️</span>
-            <span class="action-label">Speak</span>
-        </div>
-        <div class="action-card">
-            <span class="action-icon">👂</span>
-            <span class="action-label">Listen</span>
-        </div>
-        <div class="action-card">
-            <span class="action-icon">📷</span>
-            <span class="action-label">Camera</span>
-        </div>
+    <!-- 3-Mode Selector -->
+    <div class="mode-row">
+        <button class="mode-btn" id="modeTranslate">
+            <span>🌐</span> Standard
+        </button>
+        <button class="mode-btn active" id="modeConversation">
+            <span>🗣️</span> 2-Way
+        </button>
+        <button class="mode-btn" id="modeCamera">
+            <span>📷</span> Camera
+        </button>
     </div>
 
     <!-- Language Selector Bar -->
     <div class="lang-bar">
         <select id="sourceLang" class="lang-select">
-            <option value="Hindi" selected>🇮🇳 Hindi</option>
-            <option value="English">🇬🇧 English</option>
-            <option value="Bengali">🇮🇳 Bengali</option>
-            <option value="Gujarati">🇮🇳 Gujarati</option>
-            <option value="Marathi">🇮🇳 Marathi</option>
-            <option value="Tamil">🇮🇳 Tamil</option>
-            <option value="Telugu">🇮🇳 Telugu</option>
-            <option value="Urdu">🇮🇳 Urdu</option>
-            <option value="Spanish">🇪🇸 Spanish</option>
-            <option value="French">🇫🇷 French</option>
-            <option value="German">🇩🇪 German</option>
-            <option value="Japanese">🇯🇵 Japanese</option>
+            <option value="en" selected>🇬🇧 English</option>
+            <option value="hi">🇮🇳 Hindi</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="fr">🇫🇷 French</option>
+            <option value="de">🇩🇪 German</option>
+            <option value="ja">🇯🇵 Japanese</option>
+            <option value="bn">🇮🇳 Bengali</option>
+            <option value="gu">🇮🇳 Gujarati</option>
+            <option value="mr">🇮🇳 Marathi</option>
+            <option value="ta">🇮🇳 Tamil</option>
+            <option value="te">🇮🇳 Telugu</option>
+            <option value="ur">🇮🇳 Urdu</option>
         </select>
 
         <button class="swap-btn" id="swapBtn" title="Swap Languages">⇄</button>
 
         <select id="targetLang" class="lang-select">
-            <option value="English" selected>🇬🇧 English</option>
-            <option value="Hindi">🇮🇳 Hindi</option>
-            <option value="Bengali">🇮🇳 Bengali</option>
-            <option value="Gujarati">🇮🇳 Gujarati</option>
-            <option value="Marathi">🇮🇳 Marathi</option>
-            <option value="Tamil">🇮🇳 Tamil</option>
-            <option value="Telugu">🇮🇳 Telugu</option>
-            <option value="Urdu">🇮🇳 Urdu</option>
-            <option value="Spanish">🇪🇸 Spanish</option>
-            <option value="French">🇫🇷 French</option>
-            <option value="German">🇩🇪 German</option>
-            <option value="Japanese">🇯🇵 Japanese</option>
+            <option value="hi" selected>🇮🇳 Hindi</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="fr">🇫🇷 French</option>
+            <option value="de">🇩🇪 German</option>
+            <option value="ja">🇯🇵 Japanese</option>
+            <option value="bn">🇮🇳 Bengali</option>
+            <option value="gu">🇮🇳 Gujarati</option>
+            <option value="mr">🇮🇳 Marathi</option>
+            <option value="ta">🇮🇳 Tamil</option>
+            <option value="te">🇮🇳 Telugu</option>
+            <option value="ur">🇮🇳 Urdu</option>
         </select>
     </div>
 
-    <!-- Source Input Card -->
-    <div class="card">
-        <div class="card-header">
-            <span>INPUT TEXT</span>
-            <span id="charCount">0 chars</span>
+    <!-- VIEW 1: STANDARD TRANSLATION -->
+    <div id="standardView" style="display: none; flex-direction: column; gap: 14px;">
+        <div class="card-box">
+            <div class="card-header">
+                <span>INPUT TEXT</span>
+                <span id="charCount">0 chars</span>
+            </div>
+            <textarea id="inputText" placeholder="Enter text or click mic to dictate..."></textarea>
+            <div class="card-actions">
+                <button class="glass-btn" id="clearBtn">🗑️ Clear</button>
+                <button class="glass-btn" id="listenSourceBtn">🔊 Suno</button>
+            </div>
         </div>
-        <textarea id="inputText" placeholder="यहाँ टाइप करें या नीचे माइक से बोलें..."></textarea>
-        <div class="card-footer">
-            <button class="icon-btn" id="clearBtn">🗑️ Clear</button>
-            <button class="icon-btn" id="listenSourceBtn">🔊 Suno</button>
-        </div>
-    </div>
 
-    <!-- Action / Translate Button -->
-    <button class="btn-primary" id="translateBtn">
-        <span>अनुवाद करें (Translate)</span>
-        <span>→</span>
-    </button>
-
-    <!-- Output Card -->
-    <div class="card output-card">
-        <div class="card-header">
-            <span>TRANSLATION RESULT</span>
-            <button class="icon-btn" id="copyBtn" style="padding: 2px 8px;">📋 Copy</button>
-        </div>
-        <div id="outputText" class="output-text output-placeholder">
-            अनुवाद यहाँ दिखाई देगा...
-        </div>
-        <div class="card-footer">
-            <button class="icon-btn" id="speakResultBtn">🔊 Bol kar sunao</button>
-        </div>
-    </div>
-
-    <!-- Floating Mic Action -->
-    <div class="voice-section">
-        <button class="mic-btn" id="micBtn" title="बोलने के लिए दबाएँ">
-            🎙️
+        <button class="btn-translate" id="translateBtn">
+            <span>Translate</span>
+            <span>→</span>
         </button>
-        <span class="mic-hint" id="micStatus">बोलने के लिए माइक दबाएँ</span>
+
+        <div class="card-box output-box">
+            <div class="card-header">
+                <span>TRANSLATION RESULT</span>
+                <button class="glass-btn" id="copyBtn" style="padding: 2px 8px;">📋 Copy</button>
+            </div>
+            <div id="outputText" class="output-text output-placeholder">
+                Translation will appear here...
+            </div>
+            <div class="card-actions">
+                <button class="glass-btn" id="speakResultBtn">🔊 Bol kar sunao</button>
+            </div>
+        </div>
+
+        <div class="mic-hub">
+            <button class="mic-btn" id="micBtn" title="Click to Speak">🎙️</button>
+            <span style="font-size: 11px; color: var(--text-dim);" id="micStatus">Tap microphone to speak</span>
+        </div>
+    </div>
+
+    <!-- VIEW 2: 2-WAY LIVE CONVERSATION -->
+    <div id="conversationView">
+        <div class="convo-toolbar">
+            <span style="font-size: 11px; font-weight: 600; color: var(--text-dim);">LIVE DIALOGUE LOG</span>
+            <div style="display: flex; gap: 6px;">
+                <button class="glass-btn" id="exportChatTxtBtn" title="Save conversation as TXT" style="padding: 3px 8px; font-size: 11px;">💾 TXT</button>
+                <button class="glass-btn" id="exportChatPdfBtn" title="Export conversation as PDF" style="padding: 3px 8px; font-size: 11px;">📄 PDF</button>
+                <button class="glass-btn" id="clearChatBtn" style="padding: 3px 8px; font-size: 11px;">🗑️ Clear</button>
+            </div>
+        </div>
+
+        <div class="convo-chat-box" id="convoChatBox">
+            <div id="convoEmptyState" style="font-size: 12px; color: var(--text-dim); text-align: center; margin: auto;">
+                Tap Person 1 or Person 2. Instant translation & auto voice play!
+            </div>
+        </div>
+
+        <div class="convo-mic-row">
+            <div class="person-card">
+                <span class="person-title">Person 1</span>
+                <span class="person-lang" id="p1LangLabel">English</span>
+                <button class="convo-mic-btn btn-person1" id="micPerson1">🎙️</button>
+                <span style="font-size: 10px; color: var(--text-dim);" id="p1Status">Tap to speak</span>
+            </div>
+
+            <div class="person-card">
+                <span class="person-title">Person 2</span>
+                <span class="person-lang" id="p2LangLabel">Hindi</span>
+                <button class="convo-mic-btn btn-person2" id="micPerson2">🎙️</button>
+                <span style="font-size: 10px; color: var(--text-dim);" id="p2Status">Tap to speak</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 3: CAMERA & IMAGE OCR TRANSLATION -->
+    <div id="cameraView">
+        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        
+        <div class="ocr-drop-box" id="ocrDropBox">
+            <div class="ocr-icon">📸</div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-heading);">Take Photo or Upload Image</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Instant AI scan & translation</div>
+            <img id="ocrPreview" class="ocr-preview-img" alt="Selected Document">
+        </div>
+
+        <div id="ocrStatus" class="ocr-status">⏳ Processing image...</div>
+
+        <div class="card-box">
+            <div class="card-header">
+                <span>SCANNED ORIGINAL TEXT</span>
+            </div>
+            <div id="scannedText" class="output-text output-placeholder" style="min-height: 45px; font-size: 13px;">
+                Text extracted from image will show here...
+            </div>
+        </div>
+
+        <div class="card-box output-box">
+            <div class="card-header">
+                <span>TRANSLATED RESULT</span>
+                <button class="glass-btn" id="ocrCopyBtn" style="padding: 2px 8px;">📋 Copy</button>
+            </div>
+            <div id="ocrTranslatedText" class="output-text output-placeholder" style="min-height: 50px;">
+                Image translation will appear here...
+            </div>
+            <div class="card-actions">
+                <button class="glass-btn" id="ocrSpeakBtn">🔊 Bol kar sunao</button>
+                <button class="glass-btn" id="exportOcrTxtBtn">💾 Save TXT</button>
+                <button class="glass-btn" id="exportOcrPdfBtn">📄 Save PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSLATION HISTORY -->
+    <div class="history-section">
+        <div class="history-header">
+            <span>📜 TRANSLATION HISTORY</span>
+            <button class="history-btn" id="clearHistoryBtn">Clear History</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <div style="font-size: 11px; color: var(--text-dim); text-align: center; padding: 10px 0;">No translation history yet.</div>
+        </div>
     </div>
 </div>
 
 <script>
-    const inputText = document.getElementById('inputText');
-    const outputText = document.getElementById('outputText');
+    // Theme Engine
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const rootElem = document.documentElement;
+
+    function applyTheme(theme) {
+        rootElem.setAttribute('data-theme', theme);
+        themeToggleBtn.innerText = theme === 'dark' ? '☀️' : '🌙';
+        localStorage.setItem('vaani_theme', theme);
+    }
+
+    const savedTheme = localStorage.getItem('vaani_theme') || 'dark';
+    applyTheme(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = rootElem.getAttribute('data-theme');
+        applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
     const sourceLang = document.getElementById('sourceLang');
     const targetLang = document.getElementById('targetLang');
-    const translateBtn = document.getElementById('translateBtn');
     const swapBtn = document.getElementById('swapBtn');
+
+    const modeTranslate = document.getElementById('modeTranslate');
+    const modeConversation = document.getElementById('modeConversation');
+    const modeCamera = document.getElementById('modeCamera');
+
+    const standardView = document.getElementById('standardView');
+    const conversationView = document.getElementById('conversationView');
+    const cameraView = document.getElementById('cameraView');
+
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+    const translateBtn = document.getElementById('translateBtn');
     const clearBtn = document.getElementById('clearBtn');
     const copyBtn = document.getElementById('copyBtn');
     const micBtn = document.getElementById('micBtn');
@@ -469,34 +791,84 @@
     const listenSourceBtn = document.getElementById('listenSourceBtn');
     const charCount = document.getElementById('charCount');
 
-    // Char counter
-    inputText.addEventListener('input', () => {
-        charCount.innerText = `${inputText.value.length} chars`;
-    });
+    // Conversation Elements
+    const convoChatBox = document.getElementById('convoChatBox');
+    const micPerson1 = document.getElementById('micPerson1');
+    const micPerson2 = document.getElementById('micPerson2');
+    const p1LangLabel = document.getElementById('p1LangLabel');
+    const p2LangLabel = document.getElementById('p2LangLabel');
+    const p1Status = document.getElementById('p1Status');
+    const p2Status = document.getElementById('p2Status');
+    const exportChatTxtBtn = document.getElementById('exportChatTxtBtn');
+    const exportChatPdfBtn = document.getElementById('exportChatPdfBtn');
+    const clearChatBtn = document.getElementById('clearChatBtn');
 
-    // Swap Languages
+    // Camera Elements
+    const ocrDropBox = document.getElementById('ocrDropBox');
+    const imageInput = document.getElementById('imageInput');
+    const ocrPreview = document.getElementById('ocrPreview');
+    const ocrStatus = document.getElementById('ocrStatus');
+    const scannedText = document.getElementById('scannedText');
+    const ocrTranslatedText = document.getElementById('ocrTranslatedText');
+    const ocrSpeakBtn = document.getElementById('ocrSpeakBtn');
+    const ocrCopyBtn = document.getElementById('ocrCopyBtn');
+    const exportOcrTxtBtn = document.getElementById('exportOcrTxtBtn');
+    const exportOcrPdfBtn = document.getElementById('exportOcrPdfBtn');
+
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    let currentAudio = null;
+    let convoEmpty = true;
+    let conversationRecords = [];
+
+    const micMap = {
+        'hi': 'hi-IN', 'en': 'en-US', 'es': 'es-ES', 'fr': 'fr-FR',
+        'de': 'de-DE', 'ja': 'ja-JP', 'bn': 'bn-IN', 'gu': 'gu-IN',
+        'mr': 'mr-IN', 'ta': 'ta-IN', 'te': 'te-IN', 'ur': 'ur-PK'
+    };
+
+    function updateConvoLabels() {
+        p1LangLabel.innerText = sourceLang.options[sourceLang.selectedIndex].text.replace(/^[^\s]+ /, '');
+        p2LangLabel.innerText = targetLang.options[targetLang.selectedIndex].text.replace(/^[^\s]+ /, '');
+    }
+
+    function switchMode(activeBtn, viewToShow) {
+        [modeTranslate, modeConversation, modeCamera].forEach(b => b.classList.remove('active'));
+        [standardView, conversationView, cameraView].forEach(v => v.style.display = 'none');
+
+        activeBtn.classList.add('active');
+        viewToShow.style.display = 'flex';
+    }
+
+    modeTranslate.addEventListener('click', () => switchMode(modeTranslate, standardView));
+    modeConversation.addEventListener('click', () => {
+        switchMode(modeConversation, conversationView);
+        updateConvoLabels();
+    });
+    modeCamera.addEventListener('click', () => switchMode(modeCamera, cameraView));
+
+    sourceLang.addEventListener('change', updateConvoLabels);
+    targetLang.addEventListener('change', updateConvoLabels);
+
     swapBtn.addEventListener('click', () => {
         const temp = sourceLang.value;
         sourceLang.value = targetLang.value;
         targetLang.value = temp;
-        
-        const tempText = inputText.value;
-        if (outputText.innerText && !outputText.classList.contains('output-placeholder')) {
-            inputText.value = outputText.innerText;
-            outputText.innerText = tempText || 'अनुवाद यहाँ दिखाई देगा...';
-            if (!tempText) outputText.classList.add('output-placeholder');
-        }
+        updateConvoLabels();
     });
 
-    // Clear
+    inputText.addEventListener('input', () => {
+        charCount.innerText = `${inputText.value.length} chars`;
+    });
+
     clearBtn.addEventListener('click', () => {
         inputText.value = '';
-        outputText.innerText = 'अनुवाद यहाँ दिखाई देगा...';
+        outputText.innerText = 'Translation will appear here...';
         outputText.classList.add('output-placeholder');
         charCount.innerText = '0 chars';
     });
 
-    // Copy
     copyBtn.addEventListener('click', () => {
         if (!outputText.classList.contains('output-placeholder')) {
             navigator.clipboard.writeText(outputText.innerText);
@@ -505,113 +877,472 @@
         }
     });
 
-    // Translate API Call
-    translateBtn.addEventListener('click', async () => {
-        const text = inputText.value.trim();
-        if (!text) return;
-
-        translateBtn.innerHTML = '<span>अनुवाद हो रहा है...</span>';
-        translateBtn.style.opacity = '0.7';
-
-        try {
-            const res = await fetch('/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: text,
-                    source: sourceLang.value,
-                    target: targetLang.value
-                })
-            });
-            const data = await res.json();
-            
-            outputText.classList.remove('output-placeholder');
-            outputText.innerText = data.translation || data.translated_text || data.result || JSON.stringify(data);
-        } catch (err) {
-            outputText.classList.remove('output-placeholder');
-            outputText.innerText = 'अनुवाद में त्रुटि हुई। कृपया दोबारा प्रयास करें।';
-        } finally {
-            translateBtn.innerHTML = '<span>अनुवाद करें (Translate)</span><span>→</span>';
-            translateBtn.style.opacity = '1';
+    ocrCopyBtn.addEventListener('click', () => {
+        if (!ocrTranslatedText.classList.contains('output-placeholder')) {
+            navigator.clipboard.writeText(ocrTranslatedText.innerText);
+            ocrCopyBtn.innerText = '✅ Copied!';
+            setTimeout(() => ocrCopyBtn.innerText = '📋 Copy', 1500);
         }
     });
 
-    // Text to Speech
-    async function playAudio(text, lang) {
+    async function requestTranslation(text, src, tgt) {
+        const res = await fetch('/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, source: src, target: tgt })
+        });
+        const data = await res.json();
+        return data.translation || data.translated_text || data.result;
+    }
+
+    async function playInstantVoice(text, langCode, btnElement) {
         if (!text) return;
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+
+        const originalText = btnElement ? btnElement.innerText : '';
+        if (btnElement) btnElement.innerText = '⏳';
+
         try {
             const res = await fetch('/speak', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text, language: lang })
+                body: JSON.stringify({ text: text, lang: langCode })
             });
+
+            if (!res.ok) throw new Error('Audio failed');
+
             const blob = await res.blob();
             const audioUrl = URL.createObjectURL(blob);
-            const audio = new Audio(audioUrl);
-            audio.play();
-        } catch (e) {
-            // Browser Web Speech fallback
+            currentAudio = new Audio(audioUrl);
+            currentAudio.playbackRate = 0.90;
+            currentAudio.onended = () => { if (btnElement) btnElement.innerText = originalText; };
+            await currentAudio.play();
+        } catch (err) {
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.85;
+            utterance.onend = () => { if (btnElement) btnElement.innerText = originalText; };
             window.speechSynthesis.speak(utterance);
         }
     }
 
+    translateBtn.addEventListener('click', async () => {
+        const text = inputText.value.trim();
+        if (!text) return;
+
+        translateBtn.innerHTML = '<span>Translating...</span>';
+        translateBtn.style.opacity = '0.7';
+
+        try {
+            const result = await requestTranslation(text, sourceLang.value, targetLang.value);
+            outputText.classList.remove('output-placeholder');
+            outputText.innerText = result;
+            if (result) saveToHistory(text, result, sourceLang.value, targetLang.value);
+        } catch (err) {
+            outputText.classList.remove('output-placeholder');
+            outputText.innerText = 'Translation failed. Please try again.';
+        } finally {
+            translateBtn.innerHTML = '<span>Translate</span><span>→</span>';
+            translateBtn.style.opacity = '1';
+        }
+    });
+
     speakResultBtn.addEventListener('click', () => {
         if (!outputText.classList.contains('output-placeholder')) {
-            playAudio(outputText.innerText, targetLang.value);
+            playInstantVoice(outputText.innerText, targetLang.value, speakResultBtn);
+        }
+    });
+    listenSourceBtn.addEventListener('click', () => {
+        playInstantVoice(inputText.value, sourceLang.value, listenSourceBtn);
+    });
+
+    ocrSpeakBtn.addEventListener('click', () => {
+        if (!ocrTranslatedText.classList.contains('output-placeholder')) {
+            playInstantVoice(ocrTranslatedText.innerText, targetLang.value, ocrSpeakBtn);
         }
     });
 
-    listenSourceBtn.addEventListener('click', () => {
-        playAudio(inputText.value, sourceLang.value);
+    // --- CAMERA & OCR HANDLER ---
+    ocrDropBox.addEventListener('click', () => imageInput.click());
+
+    imageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            ocrPreview.src = event.target.result;
+            ocrPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        ocrStatus.style.display = 'block';
+        ocrStatus.innerText = '⏳ AI is scanning and translating...';
+        scannedText.classList.remove('output-placeholder');
+        scannedText.innerText = 'Extracting text...';
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('source', sourceLang.value);
+            formData.append('target', targetLang.value);
+
+            const res = await fetch('/ocr', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                throw new Error(data.error || 'OCR failed');
+            }
+
+            const rawText = data.scanned_text || '';
+            const translatedResult = data.translated_text || '';
+
+            scannedText.innerText = rawText;
+            ocrTranslatedText.classList.remove('output-placeholder');
+            ocrTranslatedText.innerText = translatedResult;
+            ocrStatus.innerText = '✅ Scan & Translation Complete!';
+
+            saveToHistory(`[Photo] ${rawText.slice(0, 35)}...`, translatedResult, sourceLang.value, targetLang.value);
+
+        } catch (err) {
+            console.error('OCR Error:', err);
+            ocrStatus.innerText = '❌ Failed to scan. Try a clearer picture.';
+            scannedText.innerText = 'Error: ' + (err.message || 'Scan failed');
+        }
     });
 
-    // Speech Recognition (Webkit Speech API)
-    let recognition;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRec();
-        recognition.continuous = false;
-        recognition.interimResults = false;
+    // --- 2-WAY SPEECH RECOGNITION ---
+    function appendConvoBubble(orig, trans, isPerson1) {
+        if (convoEmpty) {
+            convoChatBox.innerHTML = '';
+            convoEmpty = false;
+        }
 
-        recognition.onstart = () => {
-            micBtn.classList.add('recording');
-            micStatus.innerText = 'सुन रहा हूँ... बोलिए';
-        };
+        const speakerLabel = isPerson1 ? `Person 1 (${sourceLang.value.toUpperCase()})` : `Person 2 (${targetLang.value.toUpperCase()})`;
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        recognition.onresult = (e) => {
-            const transcript = e.results[0][0].transcript;
-            inputText.value = transcript;
-            charCount.innerText = `${transcript.length} chars`;
-            micStatus.innerText = 'सुना गया! अब अनुवाद करें।';
-            translateBtn.click();
-        };
+        conversationRecords.push({
+            speaker: speakerLabel,
+            original: orig,
+            translated: trans,
+            time: timestamp
+        });
 
-        recognition.onerror = () => {
-            micBtn.classList.remove('recording');
-            micStatus.innerText = 'माइक में आवाज़ नहीं आई, फिर दबाएँ';
-        };
-
-        recognition.onend = () => {
-            micBtn.classList.remove('recording');
-            if (micStatus.innerText === 'सुन रहा हूँ... बोलिए') {
-                micStatus.innerText = 'बोलने के लिए माइक दबाएँ';
-            }
-        };
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${isPerson1 ? 'left' : 'right'}`;
+        bubble.innerHTML = `
+            <span class="bubble-label">${speakerLabel} • ${timestamp}</span>
+            <span class="bubble-orig">"${escapeHtml(orig || '')}"</span>
+            <span class="bubble-trans">👉 ${escapeHtml(trans || '')}</span>
+        `;
+        convoChatBox.appendChild(bubble);
+        convoChatBox.scrollTop = convoChatBox.scrollHeight;
     }
 
-    micBtn.addEventListener('click', () => {
-        if (!recognition) {
-            alert('आपके ब्राउज़र में स्पीच रिकग्निशन सपोर्ट नहीं है। Google Chrome का इस्तेमाल करें।');
-            return;
-        }
-        try {
-            recognition.lang = sourceLang.value.toLowerCase().includes('hindi') ? 'hi-IN' : 'en-US';
-            recognition.start();
-        } catch (e) {
-            recognition.stop();
+    function createRecognizer(onResult, onEnd, btnElem, statusElem) {
+        if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) return null;
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = new SpeechRec();
+        rec.continuous = false;
+        rec.interimResults = true;
+
+        let accumulated = '';
+        rec.onstart = () => {
+            accumulated = '';
+            btnElem.classList.add('recording');
+            statusElem.innerText = 'Listening...';
+        };
+        rec.onresult = (e) => {
+            let interim = '';
+            for (let i = e.resultIndex; i < e.results.length; ++i) {
+                if (e.results[i].isFinal) accumulated += e.results[i][0].transcript;
+                else interim += e.results[i][0].transcript;
+            }
+            onResult(accumulated || interim);
+        };
+        rec.onerror = () => {
+            btnElem.classList.remove('recording');
+            statusElem.innerText = 'Tap to speak';
+        };
+        rec.onend = () => {
+            btnElem.classList.remove('recording');
+            statusElem.innerText = 'Tap to speak';
+            onEnd(accumulated);
+        };
+        return rec;
+    }
+
+    const p1Rec = createRecognizer(
+        (text) => { p1Status.innerText = text.slice(0, 18) + '...'; },
+        async (finalText) => {
+            if (!finalText.trim()) return;
+            p1Status.innerText = 'Translating...';
+            try {
+                const trans = await requestTranslation(finalText, sourceLang.value, targetLang.value);
+                appendConvoBubble(finalText, trans, true);
+                saveToHistory(finalText, trans, sourceLang.value, targetLang.value);
+                p1Status.innerText = '🔊 Speaking...';
+                await playInstantVoice(trans, targetLang.value, null);
+                p1Status.innerText = 'Tap to speak';
+            } catch(e) { p1Status.innerText = 'Error'; }
+        },
+        micPerson1, p1Status
+    );
+
+    micPerson1.addEventListener('click', () => {
+        if (!p1Rec) return alert('Mic not supported');
+        if (micPerson1.classList.contains('recording')) p1Rec.stop();
+        else {
+            p1Rec.lang = micMap[sourceLang.value] || 'en-US';
+            p1Rec.start();
         }
     });
+
+    const p2Rec = createRecognizer(
+        (text) => { p2Status.innerText = text.slice(0, 18) + '...'; },
+        async (finalText) => {
+            if (!finalText.trim()) return;
+            p2Status.innerText = 'Translating...';
+            try {
+                const trans = await requestTranslation(finalText, targetLang.value, sourceLang.value);
+                appendConvoBubble(finalText, trans, false);
+                saveToHistory(finalText, trans, targetLang.value, sourceLang.value);
+                p2Status.innerText = '🔊 Speaking...';
+                await playInstantVoice(trans, sourceLang.value, null);
+                p2Status.innerText = 'Tap to speak';
+            } catch(e) { p2Status.innerText = 'Error'; }
+        },
+        micPerson2, p2Status
+    );
+
+    micPerson2.addEventListener('click', () => {
+        if (!p2Rec) return alert('Mic not supported');
+        if (micPerson2.classList.contains('recording')) p2Rec.stop();
+        else {
+            p2Rec.lang = micMap[targetLang.value] || 'hi-IN';
+            p2Rec.start();
+        }
+    });
+
+    clearChatBtn.addEventListener('click', () => {
+        conversationRecords = [];
+        convoChatBox.innerHTML = '<div style="font-size: 12px; color: var(--text-dim); text-align: center; margin: auto;">Tap Person 1 or Person 2. Instant translation & auto voice play!</div>';
+        convoEmpty = true;
+    });
+
+    // --- UNIVERSAL DOWNLOAD HELPERS ---
+    function triggerDownload(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Export Chat to TXT
+    exportChatTxtBtn.addEventListener('click', () => {
+        if (conversationRecords.length === 0) return alert('No conversation to export yet!');
+        
+        let txt = `====================================\n`;
+        txt += `   VAANI - LIVE CONVERSATION TRANSCRIPT\n`;
+        txt += `   Exported on: ${new Date().toLocaleString()}\n`;
+        txt += `====================================\n\n`;
+
+        conversationRecords.forEach((item, index) => {
+            txt += `[${index + 1}] ${item.speaker} (${item.time})\n`;
+            txt += `Original:   ${item.original}\n`;
+            txt += `Translated: ${item.translated}\n`;
+            txt += `------------------------------------\n`;
+        });
+
+        triggerDownload(txt, `Vaani_Conversation_${Date.now()}.txt`, 'text/plain;charset=utf-8');
+    });
+
+    // Export Chat to PDF
+    exportChatPdfBtn.addEventListener('click', () => {
+        if (conversationRecords.length === 0) return alert('No conversation to export yet!');
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        
+        doc.setFontSize(16);
+        doc.setTextColor(30, 64, 175);
+        doc.text("Vaani AI - Conversation Transcript", 40, 50);
+
+        doc.setFontSize(10);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 40, 68);
+        doc.line(40, 75, 550, 75);
+
+        let yPos = 95;
+        doc.setFontSize(10);
+
+        conversationRecords.forEach((item, idx) => {
+            if (yPos > 740) {
+                doc.addPage();
+                yPos = 50;
+            }
+
+            doc.setTextColor(20, 20, 20);
+            doc.setFont("helvetica", "bold");
+            doc.text(`${idx + 1}. ${item.speaker} • ${item.time}`, 40, yPos);
+            yPos += 14;
+
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(70, 70, 70);
+            const origLines = doc.splitTextToSize(`Original: ${item.original}`, 500);
+            doc.text(origLines, 45, yPos);
+            yPos += (origLines.length * 12) + 2;
+
+            doc.setTextColor(0, 100, 0);
+            const transLines = doc.splitTextToSize(`Translated: ${item.translated}`, 500);
+            doc.text(transLines, 45, yPos);
+            yPos += (transLines.length * 12) + 14;
+        });
+
+        doc.save(`Vaani_Conversation_${Date.now()}.pdf`);
+    });
+
+    // Export OCR to TXT
+    exportOcrTxtBtn.addEventListener('click', () => {
+        const raw = scannedText.innerText.trim();
+        const trans = ocrTranslatedText.innerText.trim();
+        if (!raw || scannedText.classList.contains('output-placeholder')) {
+            return alert('No scanned document text to export!');
+        }
+
+        let txt = `====================================\n`;
+        txt += `   VAANI - SCANNED DOCUMENT OCR REPORT\n`;
+        txt += `   Date: ${new Date().toLocaleString()}\n`;
+        txt += `====================================\n\n`;
+        txt += `[ORIGINAL EXTRACTED TEXT]\n${raw}\n\n`;
+        txt += `------------------------------------\n`;
+        txt += `[TRANSLATED TEXT]\n${trans}\n`;
+
+        triggerDownload(txt, `Vaani_Scanned_Doc_${Date.now()}.txt`, 'text/plain;charset=utf-8');
+    });
+
+    // Export OCR to PDF
+    exportOcrPdfBtn.addEventListener('click', () => {
+        const raw = scannedText.innerText.trim();
+        const trans = ocrTranslatedText.innerText.trim();
+        if (!raw || scannedText.classList.contains('output-placeholder')) {
+            return alert('No scanned document text to export!');
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+        doc.setFontSize(16);
+        doc.setTextColor(30, 64, 175);
+        doc.text("Vaani AI - Document OCR & Translation Report", 40, 50);
+
+        doc.setFontSize(9);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Scanned: ${new Date().toLocaleString()}`, 40, 68);
+        doc.line(40, 75, 550, 75);
+
+        let yPos = 95;
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(20, 20, 20);
+        doc.text("1. Original Extracted Content:", 40, yPos);
+        yPos += 16;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(70, 70, 70);
+        const splitRaw = doc.splitTextToSize(raw, 500);
+        doc.text(splitRaw, 40, yPos);
+        yPos += (splitRaw.length * 12) + 20;
+
+        if (yPos > 700) {
+            doc.addPage();
+            yPos = 50;
+        }
+
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 100, 0);
+        doc.text("2. Translated Content:", 40, yPos);
+        yPos += 16;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(30, 30, 30);
+        const splitTrans = doc.splitTextToSize(trans, 500);
+        doc.text(splitTrans, 40, yPos);
+
+        doc.save(`Vaani_Document_OCR_${Date.now()}.pdf`);
+    });
+
+    // History Helpers
+    function getHistory() { return JSON.parse(localStorage.getItem('vaani_history') || '[]'); }
+    function saveToHistory(sourceText, transText, sLang, tLang) {
+        if (!sourceText || !transText) return;
+        let history = getHistory();
+        history.unshift({
+            id: Date.now(), 
+            sourceText: String(sourceText), 
+            transText: String(transText), 
+            sLang: String(sLang), 
+            tLang: String(tLang),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        if (history.length > 20) history = history.slice(0, 20);
+        localStorage.setItem('vaani_history', JSON.stringify(history));
+        renderHistory();
+    }
+    function renderHistory() {
+        const history = getHistory();
+        if (history.length === 0) {
+            historyList.innerHTML = '<div style="font-size: 11px; color: var(--text-dim); text-align: center; padding: 10px 0;">No translation history yet.</div>';
+            return;
+        }
+        historyList.innerHTML = history.map(item => `
+            <div class="history-item">
+                <div class="orig">${escapeHtml(item.sourceText || '')}</div>
+                <div class="trans">${escapeHtml(item.transText || '')}</div>
+                <div class="history-meta">
+                    <span>${(item.sLang || '').toUpperCase()} → ${(item.tLang || '').toUpperCase()} • ${item.time}</span>
+                    <button class="history-btn" onclick="playInstantVoice('${escapeQuotes(item.transText || '')}', '${item.tLang}')">🔊 Listen</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    function escapeHtml(str) { 
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); 
+    }
+    function escapeQuotes(str) { 
+        if (!str) return '';
+        return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;'); 
+    }
+    clearHistoryBtn.addEventListener('click', () => { localStorage.removeItem('vaani_history'); renderHistory(); });
+
+    renderHistory();
+    updateConvoLabels();
+
+    // Register Service Worker for PWA (Installable App)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(reg => console.log('Vaani PWA Service Worker Registered', reg))
+                .catch(err => console.log('Service Worker Failed', err));
+        });
+    }
 </script>
 </body>
 </html>

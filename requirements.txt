@@ -3,3 +3,5 @@ uvicorn
 deep-translator
 gTTS
 python-multipart
+pillow
+pydantic

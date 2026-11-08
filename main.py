@@ -1,264 +1,178 @@
-
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from pydantic import BaseModel
-import requests
+from deep_translator import GoogleTranslator, MyMemoryTranslator
 from gtts import gTTS
-import os
-import shutil
+from PIL import Image, ImageOps
+import io
+import urllib.request
+import urllib.parse
+import json
+import base64
 
-app = FastAPI()
-
-# FOLDERS
-os.makedirs("static", exist_ok=True)
-os.makedirs("static/profiles", exist_ok=True)
+app = FastAPI(title="Vaani - Voice & AI Translator")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-# LANGUAGES
-LANGUAGES = {
-    "hi": "hindi",
-    "en": "english",
-    "ja": "japanese",
-    "fr": "french",
-    "de": "german",
-    "es": "spanish",
-    "it": "italian",
-    "pt": "portuguese",
-    "ru": "russian",
-    "ko": "korean",
-    "zh": "chinese simplified",
-    "ar": "arabic",
-    "bn": "bengali",
-    "gu": "gujarati",
-    "mr": "marathi",
-    "ta": "tamil india",
-    "te": "telugu",
-    "ur": "urdu"
-}
-
-
-# LIBRETRANSLATE LANGUAGE CODES
-LIBRE_LANGUAGES = {
-    "hi": "hi",
-    "en": "en",
-    "ja": "ja",
-    "fr": "fr",
-    "de": "de",
-    "es": "es",
-    "it": "it",
-    "pt": "pt",
-    "ru": "ru",
-    "ko": "ko",
-    "zh": "zh",
-    "ar": "ar",
-    "bn": "bn",
-    "gu": "gu",
-    "mr": "mr",
-    "ta": "ta",
-    "te": "te",
-    "ur": "ur"
-}
-
-
-# REQUEST MODELS
 class TranslationRequest(BaseModel):
     text: str
     source: str
     target: str
 
-
-class SpeechRequest(BaseModel):
+class SpeakRequest(BaseModel):
     text: str
-    language: str
+    lang: str
 
+LOCALE_MAP = {
+    'hi': 'hi-IN', 'en': 'en-GB', 'es': 'es-ES', 'fr': 'fr-FR',
+    'de': 'de-DE', 'ja': 'ja-JP', 'bn': 'bn-IN', 'gu': 'gu-IN',
+    'mr': 'mr-IN', 'ta': 'ta-IN', 'te': 'te-IN', 'ur': 'ur-PK'
+}
 
-# HOME PAGE
-@app.get("/")
-def home():
-    return FileResponse("static/home.html")
+def robust_translate(text: str, source: str = "en", target: str = "hi") -> str:
+    if not text.strip():
+        return ""
+    
+    paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
+    if not paragraphs:
+        paragraphs = [text.strip()]
 
+    translated_chunks = []
+    src = "auto" if source == "en" else source
 
-# TRANSLATOR APP PAGE
+    for para in paragraphs:
+        chunk_res = ""
+        try:
+            chunk_res = GoogleTranslator(source=src, target=target).translate(para)
+        except Exception:
+            chunk_res = ""
+
+        if not chunk_res or chunk_res.strip() == para.strip():
+            try:
+                src_loc = LOCALE_MAP.get(source, source)
+                tgt_loc = LOCALE_MAP.get(target, target)
+                chunk_res = MyMemoryTranslator(source=src_loc, target=tgt_loc).translate(para)
+            except Exception:
+                pass
+
+        translated_chunks.append(chunk_res if chunk_res else para)
+
+    return "\n\n".join(translated_chunks)
+
 @app.get("/app")
-def vaani_app():
+async def serve_app():
     return FileResponse("static/translator.html")
 
+@app.get("/")
+async def root():
+    return FileResponse("static/translator.html")
 
-# LANGUAGES API
-@app.get("/languages")
-def get_languages():
-    return {"languages": LANGUAGES}
-
-
-# TRANSLATION
 @app.post("/translate")
-def translate_text(request: TranslationRequest):
+async def translate_text(req: TranslationRequest):
+    res = robust_translate(req.text, req.source, req.target)
+    return {"translation": res}
 
-    source_language = LIBRE_LANGUAGES.get(request.source)
-    target_language = LIBRE_LANGUAGES.get(request.target)
-
-    if not source_language:
-        return {
-            "error": "Unsupported source language"
-        }
-
-    if not target_language:
-        return {
-            "error": "Unsupported target language"
-        }
-
-    if not request.text.strip():
-        return {
-            "error": "Please enter some text"
-        }
-
-    try:
-
-        response = requests.post(
-            "http://127.0.0.1:5000/translate",
-            json={
-                "q": request.text,
-                "source": source_language,
-                "target": target_language,
-                "format": "text"
-            },
-            timeout=60
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        if "translatedText" not in data:
-            return {
-                "error": "Translation failed",
-                "details": data
-            }
-
-        translated = data["translatedText"]
-
-        return {
-            "original_text": request.text,
-            "translated_text": translated,
-            "source_language": request.source,
-            "target_language": request.target
-        }
-
-    except requests.exceptions.ConnectionError:
-        return {
-            "error": "Translation service is not running",
-            "details": "Please start LibreTranslate on port 5000"
-        }
-
-    except requests.exceptions.Timeout:
-        return {
-            "error": "Translation service timed out"
-        }
-
-    except Exception as error:
-        return {
-            "error": "Translation failed",
-            "details": str(error)
-        }
-
-
-# TEXT TO SPEECH
 @app.post("/speak")
-def speak_text(request: SpeechRequest):
-
+async def speak_audio(req: SpeakRequest):
+    text = req.text.strip()
+    if not text:
+        return JSONResponse({"error": "No text provided"}, status_code=400)
+    
+    sample_text = text[:400]
     try:
+        tts = gTTS(text=sample_text, lang=req.lang, slow=False)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        return Response(content=fp.read(), media_type="audio/mpeg")
+    except Exception:
+        try:
+            tts = gTTS(text=sample_text, lang='hi', slow=False)
+            fp = io.BytesIO()
+            tts.write_to_fp(fp)
+            fp.seek(0)
+            return Response(content=fp.read(), media_type="audio/mpeg")
+        except Exception as err:
+            return JSONResponse({"error": str(err)}, status_code=500)
 
-        language = request.language
+# Multi-Key Rotation
+OCR_KEYS = [
+    "helloworld",
+    "K87899142388957",
+    "K89376663288957",
+    "K82811462988957"
+]
 
-        if language not in LANGUAGES:
-            return {
-                "error": "Unsupported language"
+def fetch_ocr(base64_img: str, engine_no: int = 1):
+    for key in OCR_KEYS:
+        try:
+            payload = {
+                "base64Image": f"data:image/jpeg;base64,{base64_img}",
+                "language": "eng",
+                "isOverlayRequired": False,
+                "detectOrientation": True,
+                "scale": True,
+                "OCREngine": engine_no
             }
-
-        audio_file = "static/vaani_voice.mp3"
-
-        tts = gTTS(
-            text=request.text,
-            lang=language
-        )
-
-        tts.save(audio_file)
-
-        return {
-            "message": "Speech generated successfully",
-            "audio_url": "/static/vaani_voice.mp3"
-        }
-
-    except Exception as error:
-
-        return {
-            "error": "Speech generation failed",
-            "details": str(error)
-        }
-
-
-# PROFILE
-@app.post("/profile")
-async def update_profile(
-    name: str = Form(""),
-    preferred_language: str = Form("en"),
-    voice: str = Form("female"),
-    photo: UploadFile = File(None)
-):
-
-    try:
-
-        profile_data = {
-            "name": name,
-            "preferred_language": preferred_language,
-            "voice": voice
-        }
-
-        photo_url = None
-
-        if photo:
-
-            filename = photo.filename
-
-            file_path = os.path.join(
-                "static",
-                "profiles",
-                filename
+            req = urllib.request.Request(
+                "https://api.ocr.space/parse/image",
+                data=urllib.parse.urlencode(payload).encode('utf-8'),
+                headers={"apikey": key}
             )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                res = json.loads(resp.read().decode('utf-8'))
+                parsed = res.get("ParsedResults", [])
+                if parsed:
+                    text = parsed[0].get("ParsedText", "").strip()
+                    if text:
+                        return text
+        except urllib.error.HTTPError as err:
+            if err.code == 429:
+                continue
+            else:
+                continue
+        except Exception:
+            continue
+    return ""
 
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(
-                    photo.file,
-                    buffer
-                )
+@app.post("/ocr")
+async def ocr_process(file: UploadFile = File(...), source: str = Form("en"), target: str = Form("hi")):
+    try:
+        contents = await file.read()
+        
+        image = Image.open(io.BytesIO(contents))
+        image = ImageOps.exif_transpose(image)
+        image = image.convert("RGB")
+        image.thumbnail((1200, 1200))
+        
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG", quality=80)
+        optimized_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        extracted_text = fetch_ocr(optimized_base64, engine_no=1)
+        if not extracted_text:
+            extracted_text = fetch_ocr(optimized_base64, engine_no=2)
 
-            photo_url = "/static/profiles/" + filename
+        if not extracted_text:
+            return JSONResponse({"error": "Free OCR server limit reached. Please wait 1-2 minutes or upload again."}, status_code=400)
+
+        # Demo watermark aur notices ko filter out karein
+        lines = []
+        for line in extracted_text.splitlines():
+            line_lower = line.lower()
+            if any(term in line_lower for term in ["helloworld", "ocr.space", "demo key", "testing only", "freekey"]):
+                continue
+            lines.append(line)
+        cleaned_ocr_text = "\n".join(lines).strip()
+
+        target_lang = target if target else "hi"
+        source_lang = source if source else "en"
+        translated = robust_translate(cleaned_ocr_text, source=source_lang, target=target_lang)
 
         return {
-            "message": "Profile updated successfully",
-            "profile": profile_data,
-            "photo_url": photo_url
+            "scanned_text": cleaned_ocr_text,
+            "translated_text": translated
         }
-
-    except Exception as error:
-
-        return {
-            "error": "Profile update failed",
-            "details": str(error)
-        }
-
-
-# START SERVER
-if __name__ == "__main__":
-
-    import uvicorn
-
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000
-    )
-
+    except Exception as e:
+        return JSONResponse({"error": f"OCR Failed: {str(e)}"}, status_code=500)
