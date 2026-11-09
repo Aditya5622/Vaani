@@ -4,18 +4,15 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from deep_translator import GoogleTranslator
+from deep_translator import GoogleTranslator, MyMemoryTranslator
 from gtts import gTTS
 from PIL import Image
 
 app = FastAPI(title="Vaani Translator")
 
-# Static files mount karein (agar static folder exist karta hai)
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Comprehensive Language Code Mapping
-# User chahe "Hindi" likhe, "hi", ya uppercase/lowercase, sahi code par map hoga
 LANG_MAP = {
     "hindi": "hi", "hi": "hi",
     "english": "en", "en": "en",
@@ -39,7 +36,6 @@ class TranslationRequest(BaseModel):
     text: str
     source_lang: str = "auto"
     target_lang: str = "en"
-    # Frontend agar alag key names bhej raha ho to fallback ke liye:
     src: str = None
     tgt: str = None
 
@@ -49,7 +45,6 @@ def home():
 
 @app.get("/app", response_class=HTMLResponse)
 def get_app():
-    # Agar templates/index.html ya index.html exist karti hai to use load karein
     for path in ["templates/index.html", "index.html", "static/index.html"]:
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
@@ -58,37 +53,47 @@ def get_app():
 
 @app.post("/translate")
 async def translate_text(req: TranslationRequest):
+    raw_text = req.text.strip()
+    if not raw_text:
+        return {"translated_text": "", "result": ""}
+
+    src_raw = (req.source_lang or req.src or "auto").strip().lower()
+    tgt_raw = (req.target_lang or req.tgt or "en").strip().lower()
+
+    src_code = LANG_MAP.get(src_raw, src_raw)
+    tgt_code = LANG_MAP.get(tgt_raw, tgt_raw)
+
+    if src_code != "auto" and src_code == tgt_code:
+        return {"translated_text": raw_text, "result": raw_text}
+
+    # 1. पहले Google Translator आज़माएँ
     try:
-        raw_text = req.text.strip()
-        if not raw_text:
-            return {"translated_text": "", "result": ""}
-
-        # Source aur Target ko nikaalein (fallback support ke saath)
-        src_raw = (req.source_lang or req.src or "auto").strip().lower()
-        tgt_raw = (req.target_lang or req.tgt or "en").strip().lower()
-
-        src_code = LANG_MAP.get(src_raw, src_raw)
-        tgt_code = LANG_MAP.get(tgt_raw, tgt_raw)
-
-        # Agar source aur target dono ek hi hon to direct return karein
-        if src_code != "auto" and src_code == tgt_code:
-            return {"translated_text": raw_text, "result": raw_text}
-
-        # GoogleTranslator se translation call
-        translator = GoogleTranslator(source=src_code, target=tgt_code)
-        translated = translator.translate(raw_text)
-
-        # Frontend chahe translated_text read kare ya result, dono format me response
+        translated = GoogleTranslator(source=src_code, target=tgt_code).translate(raw_text)
         return {
             "translated_text": translated,
             "result": translated,
             "source": src_code,
             "target": tgt_code
         }
+    except Exception as google_err:
+        print(f"Google Rate Limit/Error: {google_err}. Falling back to MyMemory...")
 
-    except Exception as e:
-        print(f"Translation Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    # 2. अगर Google पर Rate Limit आए, तो MyMemory Translator पर स्विच करें
+    try:
+        mem_src = "en" if src_code == "auto" else src_code
+        translated = MyMemoryTranslator(source=mem_src, target=tgt_code).translate(raw_text)
+        return {
+            "translated_text": translated,
+            "result": translated,
+            "source": src_code,
+            "target": tgt_code
+        }
+    except Exception as fallback_err:
+        print(f"Fallback Error: {fallback_err}")
+        raise HTTPException(
+            status_code=503, 
+            detail="Translation servers are currently busy. Please wait 10-15 seconds and try again."
+        )
 
 @app.post("/tts")
 async def text_to_speech(text: str = Form(...), lang: str = Form("en")):
@@ -116,7 +121,6 @@ async def process_image(file: UploadFile = File(...)):
     try:
         image_data = await file.read()
         image = Image.open(io.BytesIO(image_data))
-        # Image successfully load hui ya nahi verification
         width, height = image.size
         return {
             "message": "Image uploaded successfully",
