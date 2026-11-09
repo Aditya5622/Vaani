@@ -3,570 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vaani - भारत की आवाज़</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Vaani Translator</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#2563eb">
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --accent: #ff8a00;
-            --accent-green: #10b981;
-            --bg-start: #0f172a;
-            --bg-end: #1e1b4b;
-            --surface: rgba(30, 41, 59, 0.7);
-            --surface-hover: rgba(51, 65, 85, 0.8);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-glow: rgba(99, 102, 241, 0.3);
-            --radius: 20px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background: radial-gradient(circle at top right, #312e81, var(--bg-start) 60%),
-                        linear-gradient(180deg, var(--bg-start), var(--bg-end));
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 480px;
-            background: var(--surface);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--border);
-            border-radius: 28px;
-            padding: 24px 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.15);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, var(--accent), var(--primary));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
-        }
-        .brand h1 {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(to right, #fff, #cbd5e1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .brand p {
-            font-size: 11px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 999px;
-            font-size: 12px;
-            color: var(--accent-green);
-            font-weight: 600;
-        }
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        /* 4 Main Action Cards */
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-        .action-card {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 12px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .action-card.active {
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.25), rgba(99, 102, 241, 0.05));
-            border-color: var(--primary-light);
-        }
-        .action-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--border-glow);
-        }
-        .action-icon {
-            font-size: 20px;
-        }
-        .action-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-        .action-card.active .action-label {
-            color: #fff;
-        }
-
-        /* Language Switcher Bar */
-        .lang-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 8px 12px;
-            gap: 8px;
-        }
-        .lang-select {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 14px;
-            font-weight: 600;
-            outline: none;
-            cursor: pointer;
-            text-align: center;
-        }
-        .lang-select option {
-            background: #1e293b;
-            color: #fff;
-        }
-        .swap-btn {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            color: var(--primary-light);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        .swap-btn:hover {
-            transform: rotate(180deg);
-            background: var(--primary);
-            color: #fff;
-        }
-
-        /* Input Card */
-        .card {
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            position: relative;
-        }
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-        textarea {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 16px;
-            line-height: 1.5;
-            resize: none;
-            outline: none;
-            min-height: 90px;
-        }
-        textarea::placeholder {
-            color: #64748b;
-        }
-        .card-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-        .icon-btn {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: 0.2s;
-        }
-        .icon-btn:hover {
-            color: #fff;
-            border-color: var(--primary-light);
-        }
-
-        /* Output Card */
-        .output-card {
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.08), rgba(15, 23, 42, 0.6));
-            border-color: var(--border-glow);
-        }
-        .output-text {
-            font-size: 17px;
-            line-height: 1.5;
-            min-height: 70px;
-            color: #fff;
-            font-weight: 500;
-        }
-        .output-placeholder {
-            color: #64748b;
-            font-style: italic;
-        }
-
-        /* Voice Mic Section */
-        .voice-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-top: 4px;
-        }
-        .mic-btn {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--primary));
-            border: none;
-            color: #fff;
-            font-size: 28px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-            transition: all 0.25s ease;
-            position: relative;
-        }
-        .mic-btn:hover {
-            transform: scale(1.06);
-            box-shadow: 0 15px 30px rgba(255, 138, 0, 0.4);
-        }
-        .mic-btn.recording {
-            animation: recordPulse 1.2s infinite;
-            background: linear-gradient(135deg, #ef4444, #f97316);
-        }
-        .mic-hint {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        /* Main Translate Button */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: #fff;
-            border: none;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-            transition: 0.2s;
-        }
-        .btn-primary:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-        @keyframes recordPulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.08); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #f1f5f9; color: #1e293b; display: flex; justify-content: center; min-height: 100vh; padding: 16px; }
+        .app-container { width: 100%; max-width: 540px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+        header { background: #2563eb; color: #ffffff; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+        #install-btn { background: #ffffff; color: #2563eb; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; }
+        
+        .lang-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 14px; outline: none; }
+        .swap-btn { background: none; border: none; font-size: 18px; margin: 0 10px; cursor: pointer; color: #64748b; }
+        
+        .box-container { padding: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+        .card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; background: #fff; }
+        textarea { width: 100%; border: none; resize: none; font-size: 16px; outline: none; min-height: 100px; color: #334155; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+        .action-btns { display: flex; gap: 8px; }
+        .icon-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; }
+        .icon-btn:hover { background: #e2e8f0; }
+        .recording { background: #ef4444 !important; color: white !important; animation: pulse 1s infinite; }
+        
+        .translate-btn { background: #2563eb; color: white; border: none; border-radius: 10px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .translate-btn:active { transform: scale(0.98); }
+        .status-msg { font-size: 13px; text-align: center; color: #64748b; margin-top: 4px; min-height: 18px; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Header -->
-    <div class="header">
-        <div class="brand">
-            <div class="brand-icon">🎙️</div>
-            <div>
-                <h1>Vaani</h1>
-                <p>Voice & AI Translator</p>
+    <header>
+        <h1>वाणी (Vaani)</h1>
+        <button id="install-btn">📱 Install App</button>
+    </header>
+
+    <div class="lang-bar">
+        <select id="source-lang">
+            <option value="auto">Auto Detect</option>
+            <option value="hi" selected>Hindi (हिन्दी)</option>
+            <option value="en">English</option>
+            <option value="bn">Bengali</option>
+            <option value="mr">Marathi</option>
+            <option value="te">Telugu</option>
+            <option value="ta">Tamil</option>
+            <option value="gu">Gujarati</option>
+            <option value="ur">Urdu</option>
+            <option value="pa">Punjabi</option>
+        </select>
+
+        <button class="swap-btn" id="swap-btn">⇄</button>
+
+        <select id="target-lang">
+            <option value="en" selected>English</option>
+            <option value="hi">Hindi (हिन्दी)</option>
+            <option value="bn">Bengali</option>
+            <option value="mr">Marathi</option>
+            <option value="te">Telugu</option>
+            <option value="ta">Tamil</option>
+            <option value="gu">Gujarati</option>
+            <option value="ur">Urdu</option>
+            <option value="pa">Punjabi</option>
+        </select>
+    </div>
+
+    <div class="box-container">
+        <!-- Input Card -->
+        <div class="card">
+            <textarea id="input-text" placeholder="यहाँ लिखें या माइक से बोलें..."></textarea>
+            <div class="card-footer">
+                <div class="action-btns">
+                    <button class="icon-btn" id="mic-btn" title="बोलकर लिखें">🎙️</button>
+                    <label class="icon-btn" title="कैमरा / फ़ाइल से फ़ोटो चुनें" style="cursor: pointer;">
+                        📷
+                        <input type="file" id="camera-input" accept="image/*" style="display: none;">
+                    </label>
+                </div>
+                <button class="icon-btn" id="clear-btn" title="साफ़ करें">✕</button>
             </div>
         </div>
-        <div class="status-pill">
-            <span class="status-dot"></span>
-            Online
-        </div>
-    </div>
 
-    <!-- 4 Action Cards -->
-    <div class="action-grid">
-        <div class="action-card active">
-            <span class="action-icon">🌐</span>
-            <span class="action-label">Translate</span>
-        </div>
-        <div class="action-card">
-            <span class="action-icon">🗣️</span>
-            <span class="action-label">Speak</span>
-        </div>
-        <div class="action-card">
-            <span class="action-icon">👂</span>
-            <span class="action-label">Listen</span>
-        </div>
-        <div class="action-card">
-            <span class="action-icon">📷</span>
-            <span class="action-label">Camera</span>
-        </div>
-    </div>
+        <button class="translate-btn" id="translate-btn">Translate / अनुवाद करें</button>
+        <div class="status-msg" id="status-msg"></div>
 
-    <!-- Language Selector Bar -->
-    <div class="lang-bar">
-        <select id="sourceLang" class="lang-select">
-            <option value="Hindi" selected>🇮🇳 Hindi</option>
-            <option value="English">🇬🇧 English</option>
-            <option value="Bengali">🇮🇳 Bengali</option>
-            <option value="Gujarati">🇮🇳 Gujarati</option>
-            <option value="Marathi">🇮🇳 Marathi</option>
-            <option value="Tamil">🇮🇳 Tamil</option>
-            <option value="Telugu">🇮🇳 Telugu</option>
-            <option value="Urdu">🇮🇳 Urdu</option>
-            <option value="Spanish">🇪🇸 Spanish</option>
-            <option value="French">🇫🇷 French</option>
-            <option value="German">🇩🇪 German</option>
-            <option value="Japanese">🇯🇵 Japanese</option>
-        </select>
-
-        <button class="swap-btn" id="swapBtn" title="Swap Languages">⇄</button>
-
-        <select id="targetLang" class="lang-select">
-            <option value="English" selected>🇬🇧 English</option>
-            <option value="Hindi">🇮🇳 Hindi</option>
-            <option value="Bengali">🇮🇳 Bengali</option>
-            <option value="Gujarati">🇮🇳 Gujarati</option>
-            <option value="Marathi">🇮🇳 Marathi</option>
-            <option value="Tamil">🇮🇳 Tamil</option>
-            <option value="Telugu">🇮🇳 Telugu</option>
-            <option value="Urdu">🇮🇳 Urdu</option>
-            <option value="Spanish">🇪🇸 Spanish</option>
-            <option value="French">🇫🇷 French</option>
-            <option value="German">🇩🇪 German</option>
-            <option value="Japanese">🇯🇵 Japanese</option>
-        </select>
-    </div>
-
-    <!-- Source Input Card -->
-    <div class="card">
-        <div class="card-header">
-            <span>INPUT TEXT</span>
-            <span id="charCount">0 chars</span>
+        <!-- Output Card -->
+        <div class="card" style="background: #f8fafc;">
+            <textarea id="output-text" placeholder="अनुवाद यहाँ दिखाई देगा..." readonly></textarea>
+            <div class="card-footer">
+                <div class="action-btns">
+                    <button class="icon-btn" id="speak-btn" title="सुनें">🔊</button>
+                    <button class="icon-btn" id="copy-btn" title="कॉपी करें">📋</button>
+                </div>
+            </div>
         </div>
-        <textarea id="inputText" placeholder="यहाँ टाइप करें या नीचे माइक से बोलें..."></textarea>
-        <div class="card-footer">
-            <button class="icon-btn" id="clearBtn">🗑️ Clear</button>
-            <button class="icon-btn" id="listenSourceBtn">🔊 Suno</button>
-        </div>
-    </div>
-
-    <!-- Action / Translate Button -->
-    <button class="btn-primary" id="translateBtn">
-        <span>अनुवाद करें (Translate)</span>
-        <span>→</span>
-    </button>
-
-    <!-- Output Card -->
-    <div class="card output-card">
-        <div class="card-header">
-            <span>TRANSLATION RESULT</span>
-            <button class="icon-btn" id="copyBtn" style="padding: 2px 8px;">📋 Copy</button>
-        </div>
-        <div id="outputText" class="output-text output-placeholder">
-            अनुवाद यहाँ दिखाई देगा...
-        </div>
-        <div class="card-footer">
-            <button class="icon-btn" id="speakResultBtn">🔊 Bol kar sunao</button>
-        </div>
-    </div>
-
-    <!-- Floating Mic Action -->
-    <div class="voice-section">
-        <button class="mic-btn" id="micBtn" title="बोलने के लिए दबाएँ">
-            🎙️
-        </button>
-        <span class="mic-hint" id="micStatus">बोलने के लिए माइक दबाएँ</span>
     </div>
 </div>
 
 <script>
-    const inputText = document.getElementById('inputText');
-    const outputText = document.getElementById('outputText');
-    const sourceLang = document.getElementById('sourceLang');
-    const targetLang = document.getElementById('targetLang');
-    const translateBtn = document.getElementById('translateBtn');
-    const swapBtn = document.getElementById('swapBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const micBtn = document.getElementById('micBtn');
-    const micStatus = document.getElementById('micStatus');
-    const speakResultBtn = document.getElementById('speakResultBtn');
-    const listenSourceBtn = document.getElementById('listenSourceBtn');
-    const charCount = document.getElementById('charCount');
+    const inputText = document.getElementById('input-text');
+    const outputText = document.getElementById('output-text');
+    const sourceLang = document.getElementById('source-lang');
+    const targetLang = document.getElementById('target-lang');
+    const translateBtn = document.getElementById('translate-btn');
+    const micBtn = document.getElementById('mic-btn');
+    const speakBtn = document.getElementById('speak-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const swapBtn = document.getElementById('swap-btn');
+    const cameraInput = document.getElementById('camera-input');
+    const statusMsg = document.getElementById('status-msg');
+    const installBtn = document.getElementById('install-btn');
 
-    // Char counter
-    inputText.addEventListener('input', () => {
-        charCount.innerText = `${inputText.value.length} chars`;
-    });
-
-    // Swap Languages
-    swapBtn.addEventListener('click', () => {
-        const temp = sourceLang.value;
-        sourceLang.value = targetLang.value;
-        targetLang.value = temp;
-        
-        const tempText = inputText.value;
-        if (outputText.innerText && !outputText.classList.contains('output-placeholder')) {
-            inputText.value = outputText.innerText;
-            outputText.innerText = tempText || 'अनुवाद यहाँ दिखाई देगा...';
-            if (!tempText) outputText.classList.add('output-placeholder');
-        }
-    });
-
-    // Clear
-    clearBtn.addEventListener('click', () => {
-        inputText.value = '';
-        outputText.innerText = 'अनुवाद यहाँ दिखाई देगा...';
-        outputText.classList.add('output-placeholder');
-        charCount.innerText = '0 chars';
-    });
-
-    // Copy
-    copyBtn.addEventListener('click', () => {
-        if (!outputText.classList.contains('output-placeholder')) {
-            navigator.clipboard.writeText(outputText.innerText);
-            copyBtn.innerText = '✅ Copied!';
-            setTimeout(() => copyBtn.innerText = '📋 Copy', 1500);
-        }
-    });
-
-    // Translate API Call
-    translateBtn.addEventListener('click', async () => {
+    // 1. डायरेक्ट ट्रांसलेशन फ़ंक्शन (Server Rate-Limit Proof)
+    async function translateNow() {
         const text = inputText.value.trim();
-        if (!text) return;
-
-        translateBtn.innerHTML = '<span>अनुवाद हो रहा है...</span>';
-        translateBtn.style.opacity = '0.7';
-
-        try {
-            const res = await fetch('/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: text,
-                    source: sourceLang.value,
-                    target: targetLang.value
-                })
-            });
-            const data = await res.json();
-            
-            outputText.classList.remove('output-placeholder');
-            outputText.innerText = data.translation || data.translated_text || data.result || JSON.stringify(data);
-        } catch (err) {
-            outputText.classList.remove('output-placeholder');
-            outputText.innerText = 'अनुवाद में त्रुटि हुई। कृपया दोबारा प्रयास करें।';
-        } finally {
-            translateBtn.innerHTML = '<span>अनुवाद करें (Translate)</span><span>→</span>';
-            translateBtn.style.opacity = '1';
+        if (!text) {
+            statusMsg.innerText = "कृपया पहले कुछ लिखें या बोलें!";
+            return;
         }
-    });
 
-    // Text to Speech
-    async function playAudio(text, lang) {
-        if (!text) return;
+        const sl = sourceLang.value;
+        const tl = targetLang.value;
+
+        if (sl !== 'auto' && sl === tl) {
+            outputText.value = text;
+            return;
+        }
+
+        statusMsg.innerText = "अनुवाद हो रहा है...";
+        translateBtn.disabled = true;
+
         try {
-            const res = await fetch('/speak', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text, language: lang })
-            });
-            const blob = await res.blob();
-            const audioUrl = URL.createObjectURL(blob);
-            const audio = new Audio(audioUrl);
-            audio.play();
-        } catch (e) {
-            // Browser Web Speech fallback
-            const utterance = new SpeechSynthesisUtterance(text);
-            window.speechSynthesis.speak(utterance);
+            // डायरेक्ट Google Client API (ब्राउज़र से सीधे, कोई ब्लॉक नहीं)
+            const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+            const res = await fetch(gtxUrl);
+            
+            if (res.ok) {
+                const data = await res.json();
+                const result = data[0].map(item => item[0]).join('');
+                outputText.value = result;
+                statusMsg.innerText = "✓ अनुवाद पूरा हुआ";
+            } else {
+                throw new Error("Direct request failed");
+            }
+        } catch (err) {
+            // फ़ॉलबैक: सर्वर बैकएंड
+            try {
+                const sRes = await fetch('/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, source_lang: sl, target_lang: tl })
+                });
+                const sData = await sRes.json();
+                outputText.value = sData.translated_text || sData.result || "";
+                statusMsg.innerText = "✓ अनुवाद पूरा हुआ (सर्वर)";
+            } catch (sErr) {
+                statusMsg.innerText = "अनुवाद विफल हुआ। कृपया दोबारा प्रयास करें।";
+            }
+        } finally {
+            translateBtn.disabled = false;
         }
     }
 
-    speakResultBtn.addEventListener('click', () => {
-        if (!outputText.classList.contains('output-placeholder')) {
-            playAudio(outputText.innerText, targetLang.value);
-        }
+    translateBtn.addEventListener('click', translateNow);
+
+    // 2. भाषा बदलने का बटन (Swap)
+    swapBtn.addEventListener('click', () => {
+        if (sourceLang.value === 'auto') return;
+        const temp = sourceLang.value;
+        sourceLang.value = targetLang.value;
+        targetLang.value = temp;
+        const tempText = inputText.value;
+        inputText.value = outputText.value;
+        outputText.value = tempText;
     });
 
-    listenSourceBtn.addEventListener('click', () => {
-        playAudio(inputText.value, sourceLang.value);
-    });
-
-    // Speech Recognition (Webkit Speech API)
+    // 3. माइक (Speech-to-Text)
     let recognition;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -576,42 +192,88 @@
 
         recognition.onstart = () => {
             micBtn.classList.add('recording');
-            micStatus.innerText = 'सुन रहा हूँ... बोलिए';
+            statusMsg.innerText = "बोलिए, आवाज़ रिकॉर्ड हो रही है...";
         };
 
-        recognition.onresult = (e) => {
-            const transcript = e.results[0][0].transcript;
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
             inputText.value = transcript;
-            charCount.innerText = `${transcript.length} chars`;
-            micStatus.innerText = 'सुना गया! अब अनुवाद करें।';
-            translateBtn.click();
+            statusMsg.innerText = "आवाज़ दर्ज हो गई!";
+            translateNow();
         };
 
-        recognition.onerror = () => {
+        recognition.onerror = (e) => {
             micBtn.classList.remove('recording');
-            micStatus.innerText = 'माइक में आवाज़ नहीं आई, फिर दबाएँ';
+            statusMsg.innerText = "माइक एरर: अनुमति (Permission) दें या दोबारा दबाएँ";
         };
 
         recognition.onend = () => {
             micBtn.classList.remove('recording');
-            if (micStatus.innerText === 'सुन रहा हूँ... बोलिए') {
-                micStatus.innerText = 'बोलने के लिए माइक दबाएँ';
-            }
         };
+
+        micBtn.addEventListener('click', () => {
+            recognition.lang = sourceLang.value === 'auto' ? 'hi-IN' : (sourceLang.value === 'hi' ? 'hi-IN' : 'en-US');
+            recognition.start();
+        });
+    } else {
+        micBtn.addEventListener('click', () => {
+            alert("आपके ब्राउज़र में स्पीच रिकॉग्निशन सपोर्ट नहीं है। कृपया Chrome यूज़ करें।");
+        });
     }
 
-    micBtn.addEventListener('click', () => {
-        if (!recognition) {
-            alert('आपके ब्राउज़र में स्पीच रिकग्निशन सपोर्ट नहीं है। Google Chrome का इस्तेमाल करें।');
-            return;
+    // 4. स्पीकर (Text-to-Speech)
+    speakBtn.addEventListener('click', () => {
+        const text = outputText.value.trim();
+        if (!text) return;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = targetLang.value === 'hi' ? 'hi-IN' : 'en-US';
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("स्पीच सपोर्ट उपलब्ध नहीं है।");
         }
-        try {
-            recognition.lang = sourceLang.value.toLowerCase().includes('hindi') ? 'hi-IN' : 'en-US';
-            recognition.start();
-        } catch (e) {
-            recognition.stop();
+    });
+
+    // 5. कॉपी और क्लियर बटन
+    copyBtn.addEventListener('click', () => {
+        if (!outputText.value) return;
+        navigator.clipboard.writeText(outputText.value);
+        statusMsg.innerText = "✓ अनुवाद कॉपी हो गया!";
+    });
+
+    clearBtn.addEventListener('click', () => {
+        inputText.value = "";
+        outputText.value = "";
+        statusMsg.innerText = "";
+    });
+
+    // 6. कैमरा / इमेज अपलोड हैंडलर
+    cameraInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        statusMsg.innerText = "फ़ोटो चुनी गई: " + file.name;
+    });
+
+    // 7. PWA Install Banner Handler
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                installBtn.style.display = 'none';
+            }
+            deferredPrompt = null;
         }
     });
 </script>
+
 </body>
 </html>
