@@ -10,8 +10,9 @@
     <meta name="theme-color" content="#0c0e12">
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Client-side PDF Engine -->
+    <!-- Client-side PDF & OCR Engines -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         /* CSS Theme Variables */
         :root[data-theme="dark"] {
@@ -196,10 +197,10 @@
         .mode-btn {
             background: transparent;
             border: none;
-            padding: 8px 4px;
+            padding: 9px 4px;
             border-radius: 8px;
             color: var(--text-muted);
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
@@ -210,7 +211,7 @@
         .mode-btn.active {
             background: var(--active-tab-bg);
             color: var(--text-heading);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
 
         .lang-bar {
@@ -368,8 +369,8 @@
             justify-content: center;
             box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
         }
-        .mic-btn.recording {
-            background: #dc2626;
+        .mic-btn.recording, .convo-mic-btn.recording {
+            background: #dc2626 !important;
             animation: pulse-ring 1.3s infinite;
         }
 
@@ -501,7 +502,7 @@
         }
         .ocr-status {
             font-size: 12px;
-            color: #0284c7;
+            color: #38bdf8;
             font-weight: 500;
             display: none;
             text-align: center;
@@ -668,7 +669,7 @@
     <!-- VIEW 2: 2-WAY LIVE CONVERSATION -->
     <div id="conversationView">
         <div class="convo-toolbar">
-            <span style="font-size: 11px; font-weight: 600; color: var(--text-dim);">LIVE DIALOGUE LOG</span>
+            <span style="font-size: 11px; font-weight: 600; color: var(--text-dim);">2-WAY LIVE CONVERSATION</span>
             <div style="display: flex; gap: 6px;">
                 <button class="glass-btn" id="exportChatTxtBtn" title="Save conversation as TXT" style="padding: 3px 8px; font-size: 11px;">💾 TXT</button>
                 <button class="glass-btn" id="exportChatPdfBtn" title="Export conversation as PDF" style="padding: 3px 8px; font-size: 11px;">📄 PDF</button>
@@ -828,6 +829,12 @@
         'mr': 'mr-IN', 'ta': 'ta-IN', 'te': 'te-IN', 'ur': 'ur-PK'
     };
 
+    const ocrLangMap = {
+        'hi': 'hin', 'en': 'eng', 'es': 'spa', 'fr': 'fra',
+        'de': 'deu', 'ja': 'jpn', 'bn': 'ben', 'gu': 'guj',
+        'mr': 'mar', 'ta': 'tam', 'te': 'tel', 'ur': 'urd'
+    };
+
     function updateConvoLabels() {
         p1LangLabel.innerText = sourceLang.options[sourceLang.selectedIndex].text.replace(/^[^\s]+ /, '');
         p2LangLabel.innerText = targetLang.options[targetLang.selectedIndex].text.replace(/^[^\s]+ /, '');
@@ -885,7 +892,7 @@
         }
     });
 
-    // Direct Client-side Google API with Backend Fallback (Fixes Server Rate Limit)
+    // Direct Client-side Google API with Backend Fallback (No Rate Limit)
     async function requestTranslation(text, src, tgt) {
         if (!text || !text.trim()) return '';
         if (src === tgt) return text;
@@ -911,10 +918,13 @@
     }
 
     async function playInstantVoice(text, langCode, btnElement) {
-        if (!text) return;
+        if (!text || !text.trim()) return;
         if (currentAudio) {
             currentAudio.pause();
             currentAudio = null;
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
         }
 
         const originalText = btnElement ? btnElement.innerText : '';
@@ -935,14 +945,13 @@
             const blob = await res.blob();
             const audioUrl = URL.createObjectURL(blob);
             currentAudio = new Audio(audioUrl);
-            currentAudio.playbackRate = 0.90;
+            currentAudio.playbackRate = 0.92;
             currentAudio.onended = () => { if (btnElement) btnElement.innerText = originalText; };
             await currentAudio.play();
         } catch (err) {
-            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = micMap[langCode] || 'en-US';
-            utterance.rate = 0.85;
+            utterance.rate = 0.88;
             utterance.onend = () => { if (btnElement) btnElement.innerText = originalText; };
             window.speechSynthesis.speak(utterance);
         }
@@ -1021,7 +1030,7 @@
         }
     });
 
-    // --- CAMERA & OCR HANDLER ---
+    // --- CAMERA & CLIENT-SIDE OCR HANDLER (Works 100% without server limits) ---
     ocrDropBox.addEventListener('click', () => imageInput.click());
 
     imageInput.addEventListener('change', async (e) => {
@@ -1036,31 +1045,25 @@
         reader.readAsDataURL(file);
 
         ocrStatus.style.display = 'block';
-        ocrStatus.innerText = '⏳ AI is scanning and translating...';
+        ocrStatus.innerText = '⏳ AI is reading text from image (5-10 sec)...';
         scannedText.classList.remove('output-placeholder');
         scannedText.innerText = 'Extracting text...';
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('source', sourceLang.value);
-            formData.append('target', targetLang.value);
+            const tessLang = ocrLangMap[sourceLang.value] || 'eng';
+            const worker = await Tesseract.createWorker(tessLang);
+            const ret = await worker.recognize(file);
+            await worker.terminate();
 
-            const res = await fetch('/ocr', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || data.error) {
-                throw new Error(data.error || 'OCR failed');
+            const rawText = ret.data.text.trim();
+            if (!rawText) {
+                throw new Error('No readable text found in image. Try a clearer photo.');
             }
 
-            const rawText = data.scanned_text || data.text || '';
-            const translatedResult = data.translated_text || (await requestTranslation(rawText, sourceLang.value, targetLang.value));
-
             scannedText.innerText = rawText;
+            ocrStatus.innerText = '⏳ Translating extracted text...';
+
+            const translatedResult = await requestTranslation(rawText, sourceLang.value, targetLang.value);
             ocrTranslatedText.classList.remove('output-placeholder');
             ocrTranslatedText.innerText = translatedResult;
             ocrStatus.innerText = '✅ Scan & Translation Complete!';
@@ -1069,9 +1072,10 @@
 
         } catch (err) {
             console.error('OCR Error:', err);
-            ocrStatus.innerText = '❌ Failed to scan. Try a clearer picture.';
-            scannedText.innerText = 'Error: ' + (err.message || 'Scan failed');
+            ocrStatus.innerText = '❌ ' + (err.message || 'Failed to scan. Try a clearer picture.');
+            scannedText.innerText = 'Could not read text clearly.';
         }
+        imageInput.value = '';
     });
 
     // --- 2-WAY SPEECH RECOGNITION ---
@@ -1153,7 +1157,7 @@
     );
 
     micPerson1.addEventListener('click', () => {
-        if (!p1Rec) return alert('Mic not supported');
+        if (!p1Rec) return alert('Mic not supported in this browser. Use Chrome.');
         if (micPerson1.classList.contains('recording')) p1Rec.stop();
         else {
             p1Rec.lang = micMap[sourceLang.value] || 'en-US';
@@ -1179,7 +1183,7 @@
     );
 
     micPerson2.addEventListener('click', () => {
-        if (!p2Rec) return alert('Mic not supported');
+        if (!p2Rec) return alert('Mic not supported in this browser. Use Chrome.');
         if (micPerson2.classList.contains('recording')) p2Rec.stop();
         else {
             p2Rec.lang = micMap[targetLang.value] || 'hi-IN';
@@ -1206,141 +1210,91 @@
         URL.revokeObjectURL(url);
     }
 
-    // Export Chat to TXT
     exportChatTxtBtn.addEventListener('click', () => {
         if (conversationRecords.length === 0) return alert('No conversation to export yet!');
-        
-        let txt = `====================================\n`;
-        txt += `   VAANI - LIVE CONVERSATION TRANSCRIPT\n`;
-        txt += `   Exported on: ${new Date().toLocaleString()}\n`;
-        txt += `====================================\n\n`;
-
+        let txt = `====================================\n   VAANI - LIVE CONVERSATION TRANSCRIPT\n   Exported on: ${new Date().toLocaleString()}\n====================================\n\n`;
         conversationRecords.forEach((item, index) => {
-            txt += `[${index + 1}] ${item.speaker} (${item.time})\n`;
-            txt += `Original:   ${item.original}\n`;
-            txt += `Translated: ${item.translated}\n`;
-            txt += `------------------------------------\n`;
+            txt += `[${index + 1}] ${item.speaker} (${item.time})\nOriginal:   ${item.original}\nTranslated: ${item.translated}\n------------------------------------\n`;
         });
-
         triggerDownload(txt, `Vaani_Conversation_${Date.now()}.txt`, 'text/plain;charset=utf-8');
     });
 
-    // Export Chat to PDF
     exportChatPdfBtn.addEventListener('click', () => {
         if (conversationRecords.length === 0) return alert('No conversation to export yet!');
-        
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-        
         doc.setFontSize(16);
         doc.setTextColor(30, 64, 175);
         doc.text("Vaani AI - Conversation Transcript", 40, 50);
-
         doc.setFontSize(10);
         doc.setTextColor(120, 120, 120);
         doc.text(`Generated on: ${new Date().toLocaleString()}`, 40, 68);
         doc.line(40, 75, 550, 75);
-
         let yPos = 95;
         doc.setFontSize(10);
-
         conversationRecords.forEach((item, idx) => {
-            if (yPos > 740) {
-                doc.addPage();
-                yPos = 50;
-            }
-
+            if (yPos > 740) { doc.addPage(); yPos = 50; }
             doc.setTextColor(20, 20, 20);
             doc.setFont("helvetica", "bold");
             doc.text(`${idx + 1}. ${item.speaker} • ${item.time}`, 40, yPos);
             yPos += 14;
-
             doc.setFont("helvetica", "normal");
             doc.setTextColor(70, 70, 70);
             const origLines = doc.splitTextToSize(`Original: ${item.original}`, 500);
             doc.text(origLines, 45, yPos);
             yPos += (origLines.length * 12) + 2;
-
             doc.setTextColor(0, 100, 0);
             const transLines = doc.splitTextToSize(`Translated: ${item.translated}`, 500);
             doc.text(transLines, 45, yPos);
             yPos += (transLines.length * 12) + 14;
         });
-
         doc.save(`Vaani_Conversation_${Date.now()}.pdf`);
     });
 
-    // Export OCR to TXT
     exportOcrTxtBtn.addEventListener('click', () => {
         const raw = scannedText.innerText.trim();
         const trans = ocrTranslatedText.innerText.trim();
-        if (!raw || scannedText.classList.contains('output-placeholder')) {
-            return alert('No scanned document text to export!');
-        }
-
-        let txt = `====================================\n`;
-        txt += `   VAANI - SCANNED DOCUMENT OCR REPORT\n`;
-        txt += `   Date: ${new Date().toLocaleString()}\n`;
-        txt += `====================================\n\n`;
-        txt += `[ORIGINAL EXTRACTED TEXT]\n${raw}\n\n`;
-        txt += `------------------------------------\n`;
-        txt += `[TRANSLATED TEXT]\n${trans}\n`;
-
+        if (!raw || scannedText.classList.contains('output-placeholder')) return alert('No scanned document text to export!');
+        let txt = `====================================\n   VAANI - SCANNED DOCUMENT OCR REPORT\n   Date: ${new Date().toLocaleString()}\n====================================\n\n[ORIGINAL EXTRACTED TEXT]\n${raw}\n\n------------------------------------\n[TRANSLATED TEXT]\n${trans}\n`;
         triggerDownload(txt, `Vaani_Scanned_Doc_${Date.now()}.txt`, 'text/plain;charset=utf-8');
     });
 
-    // Export OCR to PDF
     exportOcrPdfBtn.addEventListener('click', () => {
         const raw = scannedText.innerText.trim();
         const trans = ocrTranslatedText.innerText.trim();
-        if (!raw || scannedText.classList.contains('output-placeholder')) {
-            return alert('No scanned document text to export!');
-        }
-
+        if (!raw || scannedText.classList.contains('output-placeholder')) return alert('No scanned document text to export!');
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
         doc.setFontSize(16);
         doc.setTextColor(30, 64, 175);
         doc.text("Vaani AI - Document OCR & Translation Report", 40, 50);
-
         doc.setFontSize(9);
         doc.setTextColor(120, 120, 120);
         doc.text(`Scanned: ${new Date().toLocaleString()}`, 40, 68);
         doc.line(40, 75, 550, 75);
-
         let yPos = 95;
-
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(20, 20, 20);
         doc.text("1. Original Extracted Content:", 40, yPos);
         yPos += 16;
-
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(70, 70, 70);
         const splitRaw = doc.splitTextToSize(raw, 500);
         doc.text(splitRaw, 40, yPos);
         yPos += (splitRaw.length * 12) + 20;
-
-        if (yPos > 700) {
-            doc.addPage();
-            yPos = 50;
-        }
-
+        if (yPos > 700) { doc.addPage(); yPos = 50; }
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(0, 100, 0);
         doc.text("2. Translated Content:", 40, yPos);
         yPos += 16;
-
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(30, 30, 30);
         const splitTrans = doc.splitTextToSize(trans, 500);
         doc.text(splitTrans, 40, yPos);
-
         doc.save(`Vaani_Document_OCR_${Date.now()}.pdf`);
     });
 
@@ -1391,7 +1345,7 @@
     renderHistory();
     updateConvoLabels();
 
-    // Register Service Worker for PWA (Installable App)
+    // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/static/service-worker.js')
