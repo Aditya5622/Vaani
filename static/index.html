@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vaani - भारत की आवाज़</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tesseract.js for instant browser OCR (Camera text extraction) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
             --primary: #6366f1;
@@ -357,21 +359,24 @@
         </div>
     </div>
 
+    <!-- Hidden Camera / File Input -->
+    <input type="file" id="cameraFileInput" accept="image/*" style="display: none;">
+
     <!-- 4 Action Cards -->
     <div class="action-grid">
-        <div class="action-card active">
+        <div class="action-card active" id="cardTranslate">
             <span class="action-icon">🌐</span>
             <span class="action-label">Translate</span>
         </div>
-        <div class="action-card">
+        <div class="action-card" id="cardSpeak">
             <span class="action-icon">🗣️</span>
             <span class="action-label">Speak</span>
         </div>
-        <div class="action-card">
+        <div class="action-card" id="cardListen">
             <span class="action-icon">👂</span>
             <span class="action-label">Listen</span>
         </div>
-        <div class="action-card">
+        <div class="action-card" id="cardCamera">
             <span class="action-icon">📷</span>
             <span class="action-label">Camera</span>
         </div>
@@ -469,35 +474,36 @@
     const listenSourceBtn = document.getElementById('listenSourceBtn');
     const charCount = document.getElementById('charCount');
 
+    // Top 4 Action Cards
+    const cardTranslate = document.getElementById('cardTranslate');
+    const cardSpeak = document.getElementById('cardSpeak');
+    const cardListen = document.getElementById('cardListen');
+    const cardCamera = document.getElementById('cardCamera');
+    const cameraFileInput = document.getElementById('cameraFileInput');
+    const allCards = [cardTranslate, cardSpeak, cardListen, cardCamera];
+
+    function setActiveCard(activeCard) {
+        allCards.forEach(c => c.classList.remove('active'));
+        activeCard.classList.add('active');
+    }
+
     // Language Name to ISO Code Mapping
     const LANG_CODES = {
-        "Hindi": "hi",
-        "English": "en",
-        "Bengali": "bn",
-        "Gujarati": "gu",
-        "Marathi": "mr",
-        "Tamil": "ta",
-        "Telugu": "te",
-        "Urdu": "ur",
-        "Spanish": "es",
-        "French": "fr",
-        "German": "de",
-        "Japanese": "ja"
+        "Hindi": "hi", "English": "en", "Bengali": "bn", "Gujarati": "gu",
+        "Marathi": "mr", "Tamil": "ta", "Telugu": "te", "Urdu": "ur",
+        "Spanish": "es", "French": "fr", "German": "de", "Japanese": "ja"
     };
 
     const SPEECH_LOCALES = {
-        "Hindi": "hi-IN",
-        "English": "en-US",
-        "Bengali": "bn-IN",
-        "Gujarati": "gu-IN",
-        "Marathi": "mr-IN",
-        "Tamil": "ta-IN",
-        "Telugu": "te-IN",
-        "Urdu": "ur-IN",
-        "Spanish": "es-ES",
-        "French": "fr-FR",
-        "German": "de-DE",
-        "Japanese": "ja-JP"
+        "Hindi": "hi-IN", "English": "en-US", "Bengali": "bn-IN", "Gujarati": "gu-IN",
+        "Marathi": "mr-IN", "Tamil": "ta-IN", "Telugu": "te-IN", "Urdu": "ur-IN",
+        "Spanish": "es-ES", "French": "fr-FR", "German": "de-DE", "Japanese": "ja-JP"
+    };
+
+    const OCR_LANG_CODES = {
+        "Hindi": "hin", "English": "eng", "Bengali": "ben", "Gujarati": "guj",
+        "Marathi": "mar", "Tamil": "tam", "Telugu": "tel", "Urdu": "urd",
+        "Spanish": "spa", "French": "fra", "German": "deu", "Japanese": "jpn"
     };
 
     // Char counter
@@ -554,7 +560,6 @@
         translateBtn.style.opacity = '0.7';
 
         try {
-            // 1. Direct Google Client API call from user browser
             const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
             const res = await fetch(gtxUrl);
             
@@ -567,7 +572,6 @@
                 throw new Error('Direct API busy');
             }
         } catch (err) {
-            // 2. Fallback to backend /translate
             try {
                 const res = await fetch('/translate', {
                     method: 'POST',
@@ -592,29 +596,41 @@
     });
 
     // Text to Speech (Instant Browser Speech + Backend /tts Fallback)
+    let currentAudio = null;
     async function playAudio(text, langName) {
-        if (!text) return;
+        if (!text || !text.trim()) return;
         const locale = SPEECH_LOCALES[langName] || 'en-US';
         const langCode = LANG_CODES[langName] || 'en';
 
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = locale;
-            window.speechSynthesis.speak(utterance);
-            return;
         }
 
+        // 1. Try Server gTTS first (Works best on mobile phones for Hindi/Indian languages)
         try {
             const formData = new FormData();
             formData.append('text', text);
             formData.append('lang', langCode);
             const res = await fetch('/tts', { method: 'POST', body: formData });
-            const blob = await res.blob();
-            const audio = new Audio(URL.createObjectURL(blob));
-            audio.play();
+            if (res.ok) {
+                const blob = await res.blob();
+                currentAudio = new Audio(URL.createObjectURL(blob));
+                await currentAudio.play();
+                return;
+            }
         } catch (e) {
-            console.error('TTS error:', e);
+            console.warn('Server TTS fallback to browser:', e);
+        }
+
+        // 2. Fallback to Browser SpeechSynthesis
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = locale;
+            window.speechSynthesis.speak(utterance);
         }
     }
 
@@ -662,7 +678,7 @@
         };
     }
 
-    micBtn.addEventListener('click', () => {
+    function startMicRecording() {
         if (!recognition) {
             alert('आपके ब्राउज़र में स्पीच रिकग्निशन सपोर्ट नहीं है। Google Chrome का इस्तेमाल करें।');
             return;
@@ -673,6 +689,72 @@
         } catch (e) {
             recognition.stop();
         }
+    }
+
+    micBtn.addEventListener('click', startMicRecording);
+
+    // --- TOP 4 ACTION CARDS CLICK HANDLERS ---
+
+    // 1. Translate Card
+    cardTranslate.addEventListener('click', () => {
+        setActiveCard(cardTranslate);
+        inputText.focus();
+    });
+
+    // 2. Speak Card (Triggers Mic)
+    cardSpeak.addEventListener('click', () => {
+        setActiveCard(cardSpeak);
+        startMicRecording();
+    });
+
+    // 3. Listen Card (Speaks Translated Result or Input Text)
+    cardListen.addEventListener('click', () => {
+        setActiveCard(cardListen);
+        if (!outputText.classList.contains('output-placeholder') && outputText.innerText.trim()) {
+            playAudio(outputText.innerText, targetLang.value);
+        } else if (inputText.value.trim()) {
+            playAudio(inputText.value, sourceLang.value);
+        } else {
+            micStatus.innerText = 'सुनने के लिए पहले कुछ लिखें या बोलें';
+        }
+    });
+
+    // 4. Camera Card (Opens Camera / Gallery & Extracts Text via OCR)
+    cardCamera.addEventListener('click', () => {
+        setActiveCard(cardCamera);
+        cameraFileInput.click();
+    });
+
+    cameraFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        inputText.value = '';
+        inputText.placeholder = '📷 फ़ोटो से टेक्स्ट पढ़ा जा रहा है (कृपया 5-10 सेकंड रुकें)...';
+        micStatus.innerText = '📷 इमेज स्कैन हो रही है...';
+
+        try {
+            const ocrLang = OCR_LANG_CODES[sourceLang.value] || 'eng';
+            const worker = await Tesseract.createWorker(ocrLang);
+            const ret = await worker.recognize(file);
+            await worker.terminate();
+
+            const extracted = ret.data.text.trim();
+            if (extracted) {
+                inputText.value = extracted;
+                charCount.innerText = `${extracted.length} chars`;
+                micStatus.innerText = '✅ फ़ोटो से टेक्स्ट मिल गया! अनुवाद हो रहा है...';
+                translateBtn.click();
+            } else {
+                inputText.placeholder = 'यहाँ टाइप करें या नीचे माइक से बोलें...';
+                micStatus.innerText = '❌ फ़ोटो में साफ़ अक्षर नहीं दिखे, साफ़ फ़ोटो लें';
+            }
+        } catch (err) {
+            console.error('OCR Error:', err);
+            inputText.placeholder = 'यहाँ टाइप करें या नीचे माइक से बोलें...';
+            micStatus.innerText = '❌ फ़ोटो स्कैन करने में समस्या आई';
+        }
+        cameraFileInput.value = '';
     });
 </script>
 </body>
