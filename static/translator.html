@@ -1030,7 +1030,7 @@
         }
     });
 
-    // --- CAMERA & CLIENT-SIDE OCR HANDLER (Works 100% without server limits) ---
+    // --- CAMERA & CLIENT-SIDE OCR HANDLER ---
     ocrDropBox.addEventListener('click', () => imageInput.click());
 
     imageInput.addEventListener('change', async (e) => {
@@ -1344,6 +1344,26 @@
 
     renderHistory();
     updateConvoLabels();
+
+    // Automatic Online / Offline Status Indicator
+    const statusChip = document.querySelector('.status-chip');
+    function updateNetworkStatus() {
+        if (!statusChip) return;
+        if (navigator.onLine) {
+            statusChip.innerHTML = '<span class="status-dot"></span> Online';
+            statusChip.style.background = 'rgba(16, 185, 129, 0.12)';
+            statusChip.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            statusChip.style.color = '#10b981';
+        } else {
+            statusChip.innerHTML = '<span class="status-dot" style="background:#ef4444;"></span> Offline';
+            statusChip.style.background = 'rgba(239, 68, 68, 0.15)';
+            statusChip.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+            statusChip.style.color = '#ef4444';
+        }
+    }
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    updateNetworkStatus();
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
