@@ -885,7 +885,22 @@
         }
     });
 
+    // Direct Client-side Google API with Backend Fallback (Fixes Server Rate Limit)
     async function requestTranslation(text, src, tgt) {
+        if (!text || !text.trim()) return '';
+        if (src === tgt) return text;
+
+        try {
+            const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${tgt}&dt=t&q=${encodeURIComponent(text)}`;
+            const res = await fetch(gtxUrl);
+            if (res.ok) {
+                const data = await res.json();
+                return data[0].map(item => item[0]).join('');
+            }
+        } catch (err) {
+            console.warn('Direct browser translation failed, trying backend...', err);
+        }
+
         const res = await fetch('/translate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -906,10 +921,13 @@
         if (btnElement) btnElement.innerText = '⏳';
 
         try {
-            const res = await fetch('/speak', {
+            const formData = new FormData();
+            formData.append('text', text);
+            formData.append('lang', langCode);
+
+            const res = await fetch('/tts', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text, lang: langCode })
+                body: formData
             });
 
             if (!res.ok) throw new Error('Audio failed');
@@ -923,6 +941,7 @@
         } catch (err) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = micMap[langCode] || 'en-US';
             utterance.rate = 0.85;
             utterance.onend = () => { if (btnElement) btnElement.innerText = originalText; };
             window.speechSynthesis.speak(utterance);
@@ -965,6 +984,43 @@
         }
     });
 
+    // Standard Mic Handler
+    let stdRec = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        stdRec = new SpeechRec();
+        stdRec.continuous = false;
+        stdRec.interimResults = false;
+
+        stdRec.onstart = () => {
+            micBtn.classList.add('recording');
+            micStatus.innerText = 'Listening...';
+        };
+        stdRec.onresult = (e) => {
+            const transcript = e.results[0][0].transcript;
+            inputText.value = transcript;
+            charCount.innerText = `${transcript.length} chars`;
+            translateBtn.click();
+        };
+        stdRec.onerror = () => {
+            micBtn.classList.remove('recording');
+            micStatus.innerText = 'Tap microphone to speak';
+        };
+        stdRec.onend = () => {
+            micBtn.classList.remove('recording');
+            micStatus.innerText = 'Tap microphone to speak';
+        };
+    }
+
+    micBtn.addEventListener('click', () => {
+        if (!stdRec) return alert('Speech recognition not supported in this browser.');
+        if (micBtn.classList.contains('recording')) stdRec.stop();
+        else {
+            stdRec.lang = micMap[sourceLang.value] || 'en-US';
+            stdRec.start();
+        }
+    });
+
     // --- CAMERA & OCR HANDLER ---
     ocrDropBox.addEventListener('click', () => imageInput.click());
 
@@ -1001,8 +1057,8 @@
                 throw new Error(data.error || 'OCR failed');
             }
 
-            const rawText = data.scanned_text || '';
-            const translatedResult = data.translated_text || '';
+            const rawText = data.scanned_text || data.text || '';
+            const translatedResult = data.translated_text || (await requestTranslation(rawText, sourceLang.value, targetLang.value));
 
             scannedText.innerText = rawText;
             ocrTranslatedText.classList.remove('output-placeholder');
@@ -1298,7 +1354,7 @@
             sourceText: String(sourceText), 
             transText: String(transText), 
             sLang: String(sLang), 
-            tLang: String(tLang),
+            tLang: String(tLang), 
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
         if (history.length > 20) history = history.slice(0, 20);
