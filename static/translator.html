@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-L72WS83RWB"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-L72WS83RWB');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vaani - Voice & AI Translation Hub</title>
@@ -892,7 +902,7 @@
         }
     });
 
-    // Direct Client-side Google API with Backend Fallback (No Rate Limit)
+    // Direct Client-side Google API with Backend Fallback
     async function requestTranslation(text, src, tgt) {
         if (!text || !text.trim()) return '';
         if (src === tgt) return text;
@@ -1030,7 +1040,7 @@
         }
     });
 
-    // --- CAMERA & CLIENT-SIDE OCR HANDLER ---
+    // Camera & Client-Side OCR Handler
     ocrDropBox.addEventListener('click', () => imageInput.click());
 
     imageInput.addEventListener('change', async (e) => {
@@ -1078,7 +1088,7 @@
         imageInput.value = '';
     });
 
-    // --- 2-WAY SPEECH RECOGNITION ---
+    // 2-Way Speech Recognition
     function appendConvoBubble(orig, trans, isPerson1) {
         if (convoEmpty) {
             convoChatBox.innerHTML = '';
@@ -1197,7 +1207,7 @@
         convoEmpty = true;
     });
 
-    // --- UNIVERSAL DOWNLOAD HELPERS ---
+    // Download Helpers (TXT & PDF)
     function triggerDownload(content, filename, mimeType) {
         const blob = new Blob([content], { type: mimeType });
         const url = URL.createObjectURL(blob);
